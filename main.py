@@ -105,6 +105,24 @@ def run_classify_posts(batch_size: int = None):
     return results
 
 
+def run_reclassify_posts(batch_size: int = None):
+    """Re-classify all posts with updated prompt (for new confound fields)."""
+    logger.info("=" * 60)
+    logger.info("PHASE: Post Re-Classification")
+    logger.info("Re-classifying to extract situation_severity, op_fault, problem_category")
+    logger.info("=" * 60)
+
+    # Run migration first to ensure columns exist
+    db.migrate_add_confound_columns()
+
+    from src.classifiers.post_classifier import reclassify_all_posts
+
+    results = reclassify_all_posts(batch_size=batch_size)
+    logger.info(f"Post re-classification complete: {json.dumps(results, indent=2)}")
+
+    return results
+
+
 def run_classify_comments(batch_size: int = None):
     """Classify comments using Claude API."""
     logger.info("=" * 60)
@@ -301,6 +319,8 @@ def main():
     parser.add_argument("--init", action="store_true", help="Initialize database")
     parser.add_argument("--scrape", action="store_true", help="Scrape Ask Metafilter")
     parser.add_argument("--classify-posts", action="store_true", help="Classify posts")
+    parser.add_argument("--reclassify-posts", action="store_true",
+                        help="Re-classify all posts with new confound fields")
     parser.add_argument("--classify-comments", action="store_true", help="Classify comments")
     parser.add_argument("--pairwise", action="store_true", help="Run pairwise comparisons")
     parser.add_argument("--bradley-terry", action="store_true", help="Compute BT scores")
@@ -339,6 +359,8 @@ def main():
         run_scrape_metafilter(max_questions=args.limit, tag=args.tag)
     elif args.classify_posts:
         run_classify_posts(batch_size=args.batch_size)
+    elif args.reclassify_posts:
+        run_reclassify_posts(batch_size=args.batch_size)
     elif args.classify_comments:
         run_classify_comments(batch_size=args.batch_size)
     elif args.pairwise:

@@ -61,6 +61,47 @@
     </div>
 </div>
 
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+    <div class="card">
+        <h2>Severity</h2>
+        <table>
+            <tr><th>Level</th><th>Count</th></tr>
+            {% for row in severity_counts %}
+            <tr>
+                <td><span class="badge badge-{{ row.situation_severity }}">{{ row.situation_severity }}</span></td>
+                <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>OP Fault</h2>
+        <table>
+            <tr><th>Level</th><th>Count</th></tr>
+            {% for row in fault_counts %}
+            <tr>
+                <td><span class="badge badge-{{ row.op_fault }}">{{ row.op_fault }}</span></td>
+                <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Problem Category</h2>
+        <table>
+            <tr><th>Category</th><th>Count</th></tr>
+            {% for row in category_counts %}
+            <tr>
+                <td><span class="badge badge-category">{{ row.problem_category }}</span></td>
+                <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
 <div class="card">
     <h2>Quick Links</h2>
     <p>

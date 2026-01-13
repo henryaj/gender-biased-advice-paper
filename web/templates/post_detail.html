@@ -11,13 +11,24 @@
     <p>
         <span class="badge badge-{{ post.poster_gender }}">{{ post.poster_gender }}</span>
         {% if post.gender_confidence %}
-        <span class="confidence">({{ "%.0f"|format(post.gender_confidence * 100) }}% confidence)</span>
+        <span class="confidence">({{ "%.0f"|format(post.gender_confidence * 100) }}%)</span>
         {% endif %}
         &nbsp;
         <span class="badge badge-{{ post.relationship_type }}">{{ post.relationship_type }}</span>
+        {% if post.situation_severity %}
         &nbsp;
-        <span style="color: #666;">by {{ post.author }} &middot; {{ post.timestamp }}</span>
+        <span class="badge badge-{{ post.situation_severity }}">{{ post.situation_severity }} severity</span>
+        {% endif %}
+        {% if post.op_fault %}
+        &nbsp;
+        <span class="badge badge-{{ post.op_fault }}">{{ post.op_fault }} fault</span>
+        {% endif %}
+        {% if post.problem_category %}
+        &nbsp;
+        <span class="badge badge-category">{{ post.problem_category }}</span>
+        {% endif %}
     </p>
+    <p style="color: #666; font-size: 0.9em;">by {{ post.author }} &middot; {{ post.timestamp }}</p>
 
     {% if post.brief_situation_summary %}
     <p><strong>Summary:</strong> {{ post.brief_situation_summary }}</p>
@@ -35,11 +46,8 @@
         <div class="comment-meta">
             <strong>{{ comment.author }}</strong>
             &middot; {{ comment.timestamp }}
-            {% if comment.favorites %}
-            &middot; <span title="favorites">{{ comment.favorites }} ★</span>
-            {% endif %}
-            {% if comment.harshness_score %}
-            &middot; Harshness: {{ comment.harshness_score }}/10
+            {% if comment.score %}
+            &middot; <span title="score">{{ comment.score }} ★</span>
             {% endif %}
             {% if comment.advice_direction %}
             &middot; {{ comment.advice_direction }}

@@ -54,7 +54,40 @@ def index():
         ORDER BY count DESC
     ''').fetchall()
 
-    return render_template('index.html', stats=stats, gender_counts=gender_counts, type_counts=type_counts)
+    # Severity breakdown
+    severity_counts = db.execute('''
+        SELECT situation_severity, COUNT(*) as count
+        FROM post_classifications
+        WHERE is_relationship_advice = 1 AND situation_severity IS NOT NULL
+        GROUP BY situation_severity
+        ORDER BY count DESC
+    ''').fetchall()
+
+    # Fault breakdown
+    fault_counts = db.execute('''
+        SELECT op_fault, COUNT(*) as count
+        FROM post_classifications
+        WHERE is_relationship_advice = 1 AND op_fault IS NOT NULL
+        GROUP BY op_fault
+        ORDER BY count DESC
+    ''').fetchall()
+
+    # Problem category breakdown
+    category_counts = db.execute('''
+        SELECT problem_category, COUNT(*) as count
+        FROM post_classifications
+        WHERE is_relationship_advice = 1 AND problem_category IS NOT NULL
+        GROUP BY problem_category
+        ORDER BY count DESC
+    ''').fetchall()
+
+    return render_template('index.html',
+                          stats=stats,
+                          gender_counts=gender_counts,
+                          type_counts=type_counts,
+                          severity_counts=severity_counts,
+                          fault_counts=fault_counts,
+                          category_counts=category_counts)
 
 
 @app.route('/posts')
@@ -65,6 +98,9 @@ def posts():
     # Get filter params
     gender = request.args.get('gender', '')
     rel_type = request.args.get('type', '')
+    severity = request.args.get('severity', '')
+    fault = request.args.get('fault', '')
+    category = request.args.get('category', '')
     page = int(request.args.get('page', 1))
     per_page = 20
 
@@ -78,6 +114,15 @@ def posts():
     if rel_type:
         where_clauses.append('pc.relationship_type = ?')
         params.append(rel_type)
+    if severity:
+        where_clauses.append('pc.situation_severity = ?')
+        params.append(severity)
+    if fault:
+        where_clauses.append('pc.op_fault = ?')
+        params.append(fault)
+    if category:
+        where_clauses.append('pc.problem_category = ?')
+        params.append(category)
 
     where_sql = ' AND '.join(where_clauses)
 
@@ -94,7 +139,8 @@ def posts():
     posts_sql = f'''
         SELECT p.post_id, p.title, p.author, p.timestamp,
                pc.poster_gender, pc.gender_confidence, pc.relationship_type,
-               pc.brief_situation_summary,
+               pc.brief_situation_summary, pc.situation_severity, pc.op_fault,
+               pc.problem_category,
                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.post_id) as comment_count
         FROM posts p
         JOIN post_classifications pc ON p.post_id = pc.post_id
@@ -113,6 +159,21 @@ def posts():
         SELECT DISTINCT relationship_type FROM post_classifications
         WHERE is_relationship_advice = 1 ORDER BY relationship_type
     ''').fetchall()
+    severities = db.execute('''
+        SELECT DISTINCT situation_severity FROM post_classifications
+        WHERE is_relationship_advice = 1 AND situation_severity IS NOT NULL
+        ORDER BY situation_severity
+    ''').fetchall()
+    faults = db.execute('''
+        SELECT DISTINCT op_fault FROM post_classifications
+        WHERE is_relationship_advice = 1 AND op_fault IS NOT NULL
+        ORDER BY op_fault
+    ''').fetchall()
+    categories = db.execute('''
+        SELECT DISTINCT problem_category FROM post_classifications
+        WHERE is_relationship_advice = 1 AND problem_category IS NOT NULL
+        ORDER BY problem_category
+    ''').fetchall()
 
     total_pages = (total + per_page - 1) // per_page
 
@@ -120,8 +181,14 @@ def posts():
                           posts=posts_list,
                           genders=genders,
                           types=types,
+                          severities=severities,
+                          faults=faults,
+                          categories=categories,
                           current_gender=gender,
                           current_type=rel_type,
+                          current_severity=severity,
+                          current_fault=fault,
+                          current_category=category,
                           page=page,
                           total_pages=total_pages,
                           total=total)
@@ -135,7 +202,8 @@ def post_detail(post_id):
     # Get post
     post = db.execute('''
         SELECT p.*, pc.poster_gender, pc.gender_confidence, pc.relationship_type,
-               pc.brief_situation_summary, pc.classification_model
+               pc.brief_situation_summary, pc.situation_severity, pc.op_fault,
+               pc.problem_category, pc.classification_model
         FROM posts p
         LEFT JOIN post_classifications pc ON p.post_id = pc.post_id
         WHERE p.post_id = ?
@@ -146,12 +214,11 @@ def post_detail(post_id):
 
     # Get comments
     comments = db.execute('''
-        SELECT c.*, cc.harshness_score, cc.tone_labels, cc.advice_direction,
-               cc.blame_assignment
+        SELECT c.*, cc.tone_labels, cc.advice_direction
         FROM comments c
         LEFT JOIN comment_classifications cc ON c.comment_id = cc.comment_id
         WHERE c.post_id = ?
-        ORDER BY c.favorites DESC, c.timestamp ASC
+        ORDER BY c.score DESC, c.timestamp ASC
     ''', [post_id]).fetchall()
 
     return render_template('post_detail.html', post=post, comments=comments)

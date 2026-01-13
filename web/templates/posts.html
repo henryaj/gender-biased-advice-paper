@@ -23,6 +23,30 @@
             </option>
             {% endfor %}
         </select>
+        <select name="severity" onchange="this.form.submit()">
+            <option value="">All Severities</option>
+            {% for s in severities %}
+            <option value="{{ s.situation_severity }}" {% if current_severity == s.situation_severity %}selected{% endif %}>
+                {{ s.situation_severity }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="fault" onchange="this.form.submit()">
+            <option value="">All Fault Levels</option>
+            {% for f in faults %}
+            <option value="{{ f.op_fault }}" {% if current_fault == f.op_fault %}selected{% endif %}>
+                {{ f.op_fault }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="category" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for c in categories %}
+            <option value="{{ c.problem_category }}" {% if current_category == c.problem_category %}selected{% endif %}>
+                {{ c.problem_category }}
+            </option>
+            {% endfor %}
+        </select>
         <span style="line-height: 38px; color: #666;">{{ total }} posts found</span>
     </form>
 
@@ -30,22 +54,35 @@
         <tr>
             <th>Title</th>
             <th>Gender</th>
-            <th>Type</th>
+            <th>Severity</th>
+            <th>Fault</th>
+            <th>Category</th>
             <th>Comments</th>
         </tr>
         {% for post in posts %}
         <tr>
             <td>
                 <a href="/post/{{ post.post_id }}">{{ post.title }}</a>
-                <br><small style="color: #666;">{{ post.brief_situation_summary[:100] }}{% if post.brief_situation_summary|length > 100 %}...{% endif %}</small>
+                <br><small style="color: #666;">{{ post.brief_situation_summary[:80] }}{% if post.brief_situation_summary|length > 80 %}...{% endif %}</small>
             </td>
             <td>
                 <span class="badge badge-{{ post.poster_gender }}">{{ post.poster_gender }}</span>
-                {% if post.gender_confidence %}
-                <span class="confidence">{{ "%.0f"|format(post.gender_confidence * 100) }}%</span>
+            </td>
+            <td>
+                {% if post.situation_severity %}
+                <span class="badge badge-{{ post.situation_severity }}">{{ post.situation_severity }}</span>
                 {% endif %}
             </td>
-            <td><span class="badge badge-{{ post.relationship_type }}">{{ post.relationship_type }}</span></td>
+            <td>
+                {% if post.op_fault %}
+                <span class="badge badge-{{ post.op_fault }}">{{ post.op_fault }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if post.problem_category %}
+                <span class="badge badge-category">{{ post.problem_category }}</span>
+                {% endif %}
+            </td>
             <td>{{ post.comment_count }}</td>
         </tr>
         {% endfor %}
@@ -54,21 +91,21 @@
     {% if total_pages > 1 %}
     <div class="pagination">
         {% if page > 1 %}
-        <a href="?gender={{ current_gender }}&type={{ current_type }}&page={{ page - 1 }}">&laquo; Prev</a>
+        <a href="?gender={{ current_gender }}&type={{ current_type }}&severity={{ current_severity }}&fault={{ current_fault }}&category={{ current_category }}&page={{ page - 1 }}">&laquo; Prev</a>
         {% endif %}
 
         {% for p in range(1, total_pages + 1) %}
             {% if p == page %}
             <span class="current">{{ p }}</span>
             {% elif p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
-            <a href="?gender={{ current_gender }}&type={{ current_type }}&page={{ p }}">{{ p }}</a>
+            <a href="?gender={{ current_gender }}&type={{ current_type }}&severity={{ current_severity }}&fault={{ current_fault }}&category={{ current_category }}&page={{ p }}">{{ p }}</a>
             {% elif p == 4 or p == total_pages - 2 %}
             <span>...</span>
             {% endif %}
         {% endfor %}
 
         {% if page < total_pages %}
-        <a href="?gender={{ current_gender }}&type={{ current_type }}&page={{ page + 1 }}">Next &raquo;</a>
+        <a href="?gender={{ current_gender }}&type={{ current_type }}&severity={{ current_severity }}&fault={{ current_fault }}&category={{ current_category }}&page={{ page + 1 }}">Next &raquo;</a>
         {% endif %}
     </div>
     {% endif %}

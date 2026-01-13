@@ -234,9 +234,13 @@ class GenderBiasAnalyzer:
         # Create binary gender variable (1 = male)
         df["is_male"] = (df["poster_gender"] == "male").astype(int)
 
-        # Run OLS regression
+        # Run OLS regression with confound controls
         try:
-            formula = "harshness_score ~ is_male + C(relationship_type) + C(source_name) + C(advice_direction)"
+            # Extended formula including situation severity, OP fault, and problem category
+            formula = (
+                "harshness_score ~ is_male + C(relationship_type) + C(source_name) + "
+                "C(advice_direction) + C(situation_severity) + C(op_fault) + C(problem_category)"
+            )
             model = ols(formula, data=df).fit()
 
             results = {
@@ -375,6 +379,232 @@ class GenderBiasAnalyzer:
         self.results["breakdown_source"] = results
         return results
 
+    def breakdown_by_severity(self) -> Dict[str, Any]:
+        """
+        Analyze gender bias breakdown by situation severity.
+
+        Returns:
+            Dictionary with results by severity level
+        """
+        if self.data is None:
+            self.load_data()
+
+        logger.info("Running breakdown by severity")
+
+        results = {}
+
+        df = self.data[
+            (self.data["poster_gender"].isin(["male", "female"])) &
+            (self.data["harshness_score"].notna())
+        ].copy()
+
+        for severity in ["low", "medium", "high"]:
+            subset = df[df["situation_severity"] == severity]
+            male_scores = subset[subset["poster_gender"] == "male"]["harshness_score"].values
+            female_scores = subset[subset["poster_gender"] == "female"]["harshness_score"].values
+
+            if len(male_scores) < 3 or len(female_scores) < 3:
+                continue
+
+            d = cohens_d(male_scores, female_scores)
+            t_stat, t_pvalue = stats.ttest_ind(male_scores, female_scores)
+
+            results[severity] = {
+                "n_male": len(male_scores),
+                "n_female": len(female_scores),
+                "mean_male": float(np.mean(male_scores)),
+                "mean_female": float(np.mean(female_scores)),
+                "cohens_d": float(d),
+                "t_statistic": float(t_stat),
+                "p_value": float(t_pvalue),
+                "significant": t_pvalue < 0.05
+            }
+
+        self.results["breakdown_severity"] = results
+        return results
+
+    def breakdown_by_op_fault(self) -> Dict[str, Any]:
+        """
+        Analyze gender bias breakdown by OP fault level.
+
+        Returns:
+            Dictionary with results by fault level
+        """
+        if self.data is None:
+            self.load_data()
+
+        logger.info("Running breakdown by OP fault")
+
+        results = {}
+
+        df = self.data[
+            (self.data["poster_gender"].isin(["male", "female"])) &
+            (self.data["harshness_score"].notna())
+        ].copy()
+
+        for fault in ["none", "some", "substantial", "unclear"]:
+            subset = df[df["op_fault"] == fault]
+            male_scores = subset[subset["poster_gender"] == "male"]["harshness_score"].values
+            female_scores = subset[subset["poster_gender"] == "female"]["harshness_score"].values
+
+            if len(male_scores) < 3 or len(female_scores) < 3:
+                continue
+
+            d = cohens_d(male_scores, female_scores)
+            t_stat, t_pvalue = stats.ttest_ind(male_scores, female_scores)
+
+            results[fault] = {
+                "n_male": len(male_scores),
+                "n_female": len(female_scores),
+                "mean_male": float(np.mean(male_scores)),
+                "mean_female": float(np.mean(female_scores)),
+                "cohens_d": float(d),
+                "t_statistic": float(t_stat),
+                "p_value": float(t_pvalue),
+                "significant": t_pvalue < 0.05
+            }
+
+        self.results["breakdown_op_fault"] = results
+        return results
+
+    def breakdown_by_problem_category(self) -> Dict[str, Any]:
+        """
+        Analyze gender bias breakdown by problem category.
+
+        Returns:
+            Dictionary with results by category
+        """
+        if self.data is None:
+            self.load_data()
+
+        logger.info("Running breakdown by problem category")
+
+        results = {}
+
+        df = self.data[
+            (self.data["poster_gender"].isin(["male", "female"])) &
+            (self.data["harshness_score"].notna())
+        ].copy()
+
+        for category in df["problem_category"].unique():
+            if pd.isna(category):
+                continue
+
+            subset = df[df["problem_category"] == category]
+            male_scores = subset[subset["poster_gender"] == "male"]["harshness_score"].values
+            female_scores = subset[subset["poster_gender"] == "female"]["harshness_score"].values
+
+            if len(male_scores) < 3 or len(female_scores) < 3:
+                continue
+
+            d = cohens_d(male_scores, female_scores)
+            t_stat, t_pvalue = stats.ttest_ind(male_scores, female_scores)
+
+            results[category] = {
+                "n_male": len(male_scores),
+                "n_female": len(female_scores),
+                "mean_male": float(np.mean(male_scores)),
+                "mean_female": float(np.mean(female_scores)),
+                "cohens_d": float(d),
+                "t_statistic": float(t_stat),
+                "p_value": float(t_pvalue),
+                "significant": t_pvalue < 0.05
+            }
+
+        self.results["breakdown_category"] = results
+        return results
+
+    def check_confound_balance(self) -> Dict[str, Any]:
+        """
+        Check if severity/fault are balanced across genders.
+
+        This is crucial for understanding if observed bias is due to
+        men describing objectively worse situations.
+
+        Returns:
+            Dictionary with cross-tabulations and chi-square tests
+        """
+        if self.data is None:
+            self.load_data()
+
+        logger.info("Checking confound balance across genders")
+
+        results = {
+            "description": "Checks if men and women have different distributions of severity/fault/category",
+            "severity_by_gender": {},
+            "fault_by_gender": {},
+            "category_by_gender": {},
+            "chi_square_tests": {}
+        }
+
+        df = self.data[self.data["poster_gender"].isin(["male", "female"])].copy()
+
+        # Cross-tabulation: severity by gender
+        severity_crosstab = pd.crosstab(df["poster_gender"], df["situation_severity"])
+        results["severity_by_gender"] = severity_crosstab.to_dict()
+
+        # Chi-square test for severity independence
+        try:
+            chi2, pval, dof, expected = stats.chi2_contingency(severity_crosstab)
+            results["chi_square_tests"]["severity"] = {
+                "chi2": float(chi2),
+                "p_value": float(pval),
+                "dof": int(dof),
+                "significant": pval < 0.05,
+                "interpretation": (
+                    "Men and women describe situations of DIFFERENT severity"
+                    if pval < 0.05 else
+                    "Severity is similarly distributed across genders"
+                )
+            }
+        except ValueError:
+            results["chi_square_tests"]["severity"] = {"error": "Insufficient data"}
+
+        # Cross-tabulation: fault by gender
+        fault_crosstab = pd.crosstab(df["poster_gender"], df["op_fault"])
+        results["fault_by_gender"] = fault_crosstab.to_dict()
+
+        # Chi-square test for fault independence
+        try:
+            chi2, pval, dof, expected = stats.chi2_contingency(fault_crosstab)
+            results["chi_square_tests"]["op_fault"] = {
+                "chi2": float(chi2),
+                "p_value": float(pval),
+                "dof": int(dof),
+                "significant": pval < 0.05,
+                "interpretation": (
+                    "Men and women are blamed differently (confound exists!)"
+                    if pval < 0.05 else
+                    "Fault assignment is similar across genders"
+                )
+            }
+        except ValueError:
+            results["chi_square_tests"]["op_fault"] = {"error": "Insufficient data"}
+
+        # Cross-tabulation: category by gender
+        cat_crosstab = pd.crosstab(df["poster_gender"], df["problem_category"])
+        results["category_by_gender"] = cat_crosstab.to_dict()
+
+        # Chi-square test for category independence
+        try:
+            chi2, pval, dof, expected = stats.chi2_contingency(cat_crosstab)
+            results["chi_square_tests"]["problem_category"] = {
+                "chi2": float(chi2),
+                "p_value": float(pval),
+                "dof": int(dof),
+                "significant": pval < 0.05,
+                "interpretation": (
+                    "Men and women ask about DIFFERENT problem types"
+                    if pval < 0.05 else
+                    "Problem categories are similar across genders"
+                )
+            }
+        except ValueError:
+            results["chi_square_tests"]["problem_category"] = {"error": "Insufficient data"}
+
+        self.results["confound_balance"] = results
+        return results
+
     def tone_label_analysis(self) -> Dict[str, Any]:
         """
         Analyze frequency of tone labels by gender.
@@ -467,6 +697,10 @@ class GenderBiasAnalyzer:
             "regression": self.regression_analysis(),
             "breakdown_by_relationship_type": self.breakdown_by_relationship_type(),
             "breakdown_by_source": self.breakdown_by_source(),
+            "breakdown_by_severity": self.breakdown_by_severity(),
+            "breakdown_by_op_fault": self.breakdown_by_op_fault(),
+            "breakdown_by_problem_category": self.breakdown_by_problem_category(),
+            "confound_balance": self.check_confound_balance(),
             "tone_label_analysis": self.tone_label_analysis()
         }
 

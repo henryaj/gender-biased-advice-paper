@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS post_classifications (
     gender_confidence FLOAT,
     relationship_type TEXT,
     brief_situation_summary TEXT,
+    situation_severity TEXT,
+    op_fault TEXT,
+    problem_category TEXT,
     classification_model TEXT,
     classification_timestamp DATETIME
 );
@@ -95,6 +98,9 @@ CREATE INDEX IF NOT EXISTS idx_posts_source ON posts(source_id);
 CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_post_class_gender ON post_classifications(poster_gender);
 CREATE INDEX IF NOT EXISTS idx_post_class_relationship ON post_classifications(is_relationship_advice);
+CREATE INDEX IF NOT EXISTS idx_post_class_severity ON post_classifications(situation_severity);
+CREATE INDEX IF NOT EXISTS idx_post_class_fault ON post_classifications(op_fault);
+CREATE INDEX IF NOT EXISTS idx_post_class_category ON post_classifications(problem_category);
 CREATE INDEX IF NOT EXISTS idx_comment_class_direction ON comment_classifications(advice_direction);
 CREATE INDEX IF NOT EXISTS idx_pairwise_dimension ON pairwise_comparisons(dimension);
 """
@@ -143,6 +149,31 @@ class Database:
                 )
 
         logger.info("Database initialized successfully")
+
+    def migrate_add_confound_columns(self):
+        """Add situation_severity, op_fault, problem_category columns if they don't exist."""
+        logger.info("Running migration to add confound control columns")
+        with self.get_connection() as conn:
+            # Check existing columns
+            cursor = conn.execute("PRAGMA table_info(post_classifications)")
+            existing_columns = {row['name'] for row in cursor.fetchall()}
+
+            if 'situation_severity' not in existing_columns:
+                conn.execute("ALTER TABLE post_classifications ADD COLUMN situation_severity TEXT")
+                logger.info("Added situation_severity column")
+            if 'op_fault' not in existing_columns:
+                conn.execute("ALTER TABLE post_classifications ADD COLUMN op_fault TEXT")
+                logger.info("Added op_fault column")
+            if 'problem_category' not in existing_columns:
+                conn.execute("ALTER TABLE post_classifications ADD COLUMN problem_category TEXT")
+                logger.info("Added problem_category column")
+
+            # Create indexes if not exist
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_post_class_severity ON post_classifications(situation_severity)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_post_class_fault ON post_classifications(op_fault)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_post_class_category ON post_classifications(problem_category)")
+
+        logger.info("Migration complete")
 
     def get_source_id(self, name: str) -> int:
         """Get source ID by name."""
@@ -215,7 +246,8 @@ class Database:
         with self.get_connection() as conn:
             query = """
                 SELECT p.*, pc.poster_gender, pc.gender_confidence,
-                       pc.relationship_type, pc.brief_situation_summary
+                       pc.relationship_type, pc.brief_situation_summary,
+                       pc.situation_severity, pc.op_fault, pc.problem_category
                 FROM posts p
                 JOIN post_classifications pc ON p.post_id = pc.post_id
                 WHERE pc.is_relationship_advice = 1
@@ -322,18 +354,23 @@ class Database:
         gender_confidence: float,
         relationship_type: str,
         brief_situation_summary: str,
-        classification_model: str
+        classification_model: str,
+        situation_severity: Optional[str] = None,
+        op_fault: Optional[str] = None,
+        problem_category: Optional[str] = None
     ):
         """Insert or update a post classification."""
         with self.get_connection() as conn:
             conn.execute(
                 """INSERT OR REPLACE INTO post_classifications
                 (post_id, is_relationship_advice, poster_gender, gender_confidence,
-                 relationship_type, brief_situation_summary, classification_model,
+                 relationship_type, brief_situation_summary, situation_severity,
+                 op_fault, problem_category, classification_model,
                  classification_timestamp)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (post_id, is_relationship_advice, poster_gender, gender_confidence,
-                 relationship_type, brief_situation_summary, classification_model,
+                 relationship_type, brief_situation_summary, situation_severity,
+                 op_fault, problem_category, classification_model,
                  datetime.now())
             )
 
@@ -450,6 +487,9 @@ class Database:
                     pc.poster_gender,
                     pc.gender_confidence,
                     pc.relationship_type,
+                    pc.situation_severity,
+                    pc.op_fault,
+                    pc.problem_category,
                     cc.is_advice,
                     cc.advice_direction,
                     cc.tone_labels,
