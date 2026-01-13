@@ -50,9 +50,16 @@
             &middot; <span title="score">{{ comment.score }} ★</span>
             {% endif %}
             {% if comment.advice_direction %}
-            &middot; {{ comment.advice_direction }}
+            &middot; <span class="badge badge-direction-{{ comment.advice_direction }}">{{ comment.advice_direction | replace('_', ' ') }}</span>
             {% endif %}
         </div>
+        {% if comment.tone_labels %}
+        <div class="tone-labels">
+            {% for tone in comment.tone_labels %}
+            <span class="tone-tag tone-{{ tone }}">{{ tone }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
         <div style="white-space: pre-wrap;">{{ comment.body }}</div>
     </div>
     {% else %}

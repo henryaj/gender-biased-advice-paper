@@ -1,5 +1,6 @@
 """Simple Flask app for exploring the research dataset."""
 
+import json
 import sqlite3
 from flask import Flask, render_template, request, g
 
@@ -213,13 +214,26 @@ def post_detail(post_id):
         return "Post not found", 404
 
     # Get comments
-    comments = db.execute('''
+    comments_raw = db.execute('''
         SELECT c.*, cc.tone_labels, cc.advice_direction
         FROM comments c
         LEFT JOIN comment_classifications cc ON c.comment_id = cc.comment_id
         WHERE c.post_id = ?
         ORDER BY c.score DESC, c.timestamp ASC
     ''', [post_id]).fetchall()
+
+    # Parse tone_labels JSON
+    comments = []
+    for c in comments_raw:
+        comment = dict(c)
+        if comment.get('tone_labels'):
+            try:
+                comment['tone_labels'] = json.loads(comment['tone_labels'])
+            except json.JSONDecodeError:
+                comment['tone_labels'] = []
+        else:
+            comment['tone_labels'] = []
+        comments.append(comment)
 
     return render_template('post_detail.html', post=post, comments=comments)
 
