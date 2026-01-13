@@ -1,0 +1,38 @@
+2026-01-13 15:23:54,752 - gender_bias_research.main - WARNING - Some environment variables are not set:
+2026-01-13 15:23:54,752 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_ID: Required for Reddit scraping
+2026-01-13 15:23:54,752 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_SECRET: Required for Reddit scraping
+2026-01-13 15:23:54,752 - gender_bias_research.main - WARNING -   - ANTHROPIC_API_KEY: Required for LLM classification
+2026-01-13 15:23:54,752 - gender_bias_research.main - WARNING - Set these before running the corresponding pipeline phases.
+2026-01-13 15:23:54,752 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:23:54,752 - gender_bias_research.main - INFO - PHASE: Database Initialization
+2026-01-13 15:23:54,752 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:23:54,752 - gender_bias_research.database - INFO - Initializing database at /Users/henryaj/workspace/gender-biased-advice-paper/gender_bias_research/data/research.db
+2026-01-13 15:23:54,753 - gender_bias_research.database - INFO - Database initialized successfully
+2026-01-13 15:23:54,754 - gender_bias_research.main - INFO - Database initialized. Current stats: {
+  "total_posts": 0,
+  "total_comments": 0,
+  "posts_by_source": {},
+  "classified_posts": 0,
+  "classified_comments": 0,
+  "relationship_posts_by_gender": {},
+  "pairwise_comparisons_by_dimension": {}
+}
+2026-01-13 15:23:54,858 - gender_bias_research.metafilter_scraper - INFO - Metafilter scraper initialized (delay=2.5s)
+2026-01-13 15:23:54,858 - gender_bias_research.metafilter_scraper - INFO - Checkpoint cleared
+2026-01-13 15:23:54,858 - gender_bias_research.main - INFO - Checkpoint cleared
+2026-01-13 15:23:54,858 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:23:54,858 - gender_bias_research.main - INFO - PHASE: Metafilter Scraping
+2026-01-13 15:23:54,858 - gender_bias_research.main - INFO - Tag: relationships, Max questions: 5
+2026-01-13 15:23:54,858 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:23:54,858 - gender_bias_research.metafilter_scraper - INFO - Metafilter scraper initialized (delay=2.5s)
+2026-01-13 15:23:54,859 - gender_bias_research.metafilter_scraper - INFO - Starting scrape of 'relationships' tag (max=5)
+2026-01-13 15:23:54,859 - gender_bias_research.metafilter_scraper - INFO - Fetching tag page 1: https://ask.metafilter.com/tags/relationships?page=1
+2026-01-13 15:23:57,721 - gender_bias_research.metafilter_scraper - INFO - Page 1: found 50 posts, total URLs: 5
+2026-01-13 15:23:57,722 - gender_bias_research.metafilter_scraper - INFO - Found 5 question URLs
+2026-01-13 15:24:37,496 - gender_bias_research.metafilter_scraper - INFO - Completed: 5 questions and 125 answers inserted (0 errors)
+2026-01-13 15:24:37,497 - gender_bias_research.main - INFO - Metafilter scraping complete: {
+  "questions_scraped": 5,
+  "questions_inserted": 5,
+  "answers_inserted": 125,
+  "errors": 0
+}

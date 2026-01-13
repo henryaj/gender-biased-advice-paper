@@ -1,0 +1,19 @@
+2026-01-13 15:21:55,168 - gender_bias_research.main - WARNING - Some environment variables are not set:
+2026-01-13 15:21:55,168 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_ID: Required for Reddit scraping
+2026-01-13 15:21:55,168 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_SECRET: Required for Reddit scraping
+2026-01-13 15:21:55,168 - gender_bias_research.main - WARNING -   - ANTHROPIC_API_KEY: Required for LLM classification
+2026-01-13 15:21:55,168 - gender_bias_research.main - WARNING - Set these before running the corresponding pipeline phases.
+2026-01-13 15:21:55,168 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:21:55,168 - gender_bias_research.main - INFO - PHASE: Database Initialization
+2026-01-13 15:21:55,168 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:21:55,168 - gender_bias_research.database - INFO - Initializing database at /Users/henryaj/workspace/gender-biased-advice-paper/gender_bias_research/data/research.db
+2026-01-13 15:21:55,173 - gender_bias_research.database - INFO - Database initialized successfully
+2026-01-13 15:21:55,174 - gender_bias_research.main - INFO - Database initialized. Current stats: {
+  "total_posts": 0,
+  "total_comments": 0,
+  "posts_by_source": {},
+  "classified_posts": 0,
+  "classified_comments": 0,
+  "relationship_posts_by_gender": {},
+  "pairwise_comparisons_by_dimension": {}
+}

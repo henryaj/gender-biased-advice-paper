@@ -1,0 +1,27 @@
+# Gender Bias Research Pipeline - Requirements
+# Python 3.10+ required
+
+# Web scraping
+praw>=7.7.0                    # Reddit API wrapper
+requests>=2.31.0               # HTTP requests
+beautifulsoup4>=4.12.0         # HTML parsing
+
+# LLM API
+anthropic>=0.18.0              # Claude API client
+
+# Data processing
+pandas>=2.0.0                  # Data manipulation
+numpy>=1.24.0                  # Numerical computing
+
+# Statistical analysis
+scipy>=1.11.0                  # Statistical tests
+statsmodels>=0.14.0            # Regression models
+
+# Visualization
+matplotlib>=3.7.0              # Plotting
+seaborn>=0.12.0                # Statistical visualization
+
+# Optional: for development
+# pytest>=7.0.0                # Testing
+# black>=23.0.0                # Code formatting
+# mypy>=1.0.0                  # Type checking

@@ -1,0 +1,56 @@
+2026-01-13 15:24:53,491 - gender_bias_research.main - WARNING - Some environment variables are not set:
+2026-01-13 15:24:53,491 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_ID: Required for Reddit scraping
+2026-01-13 15:24:53,491 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_SECRET: Required for Reddit scraping
+2026-01-13 15:24:53,491 - gender_bias_research.main - WARNING -   - ANTHROPIC_API_KEY: Required for LLM classification
+2026-01-13 15:24:53,491 - gender_bias_research.main - WARNING - Set these before running the corresponding pipeline phases.
+2026-01-13 15:24:53,491 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:24:53,491 - gender_bias_research.main - INFO - PHASE: Database Initialization
+2026-01-13 15:24:53,491 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:24:53,491 - gender_bias_research.database - INFO - Initializing database at /Users/henryaj/workspace/gender-biased-advice-paper/gender_bias_research/data/research.db
+2026-01-13 15:24:53,492 - gender_bias_research.database - INFO - Database initialized successfully
+2026-01-13 15:24:53,492 - gender_bias_research.main - INFO - Database initialized. Current stats: {
+  "total_posts": 5,
+  "total_comments": 125,
+  "posts_by_source": {
+    "askmetafilter": 5
+  },
+  "classified_posts": 0,
+  "classified_comments": 0,
+  "relationship_posts_by_gender": {},
+  "pairwise_comparisons_by_dimension": {}
+}
+2026-01-13 15:24:53,563 - gender_bias_research.metafilter_scraper - INFO - Metafilter scraper initialized (delay=2.5s)
+2026-01-13 15:24:53,563 - gender_bias_research.metafilter_scraper - INFO - Checkpoint cleared
+2026-01-13 15:24:53,563 - gender_bias_research.main - INFO - Checkpoint cleared
+2026-01-13 15:24:53,563 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:24:53,563 - gender_bias_research.main - INFO - PHASE: Metafilter Scraping
+2026-01-13 15:24:53,563 - gender_bias_research.main - INFO - Tag: relationships, Max questions: 100
+2026-01-13 15:24:53,563 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:24:53,563 - gender_bias_research.metafilter_scraper - INFO - Metafilter scraper initialized (delay=2.5s)
+2026-01-13 15:24:53,563 - gender_bias_research.metafilter_scraper - INFO - Starting scrape of 'relationships' tag (max=100)
+2026-01-13 15:24:53,563 - gender_bias_research.metafilter_scraper - INFO - Fetching tag page 1: https://ask.metafilter.com/tags/relationships?page=1
+2026-01-13 15:24:56,436 - gender_bias_research.metafilter_scraper - INFO - Page 1: found 50 posts, total URLs: 50
+2026-01-13 15:24:56,436 - gender_bias_research.metafilter_scraper - INFO - Fetching tag page 2: https://ask.metafilter.com/tags/relationships?page=2
+2026-01-13 15:24:59,266 - gender_bias_research.metafilter_scraper - INFO - Page 2: found 50 posts, total URLs: 100
+2026-01-13 15:24:59,267 - gender_bias_research.metafilter_scraper - INFO - Found 100 question URLs
+2026-01-13 15:25:27,299 - gender_bias_research.metafilter_scraper - INFO - Progress: 10/100 scraped, 5 inserted, 128 answers, 0 errors
+2026-01-13 15:26:07,020 - gender_bias_research.metafilter_scraper - INFO - Progress: 20/100 scraped, 15 inserted, 402 answers, 0 errors
+2026-01-13 15:26:42,299 - gender_bias_research.metafilter_scraper - ERROR - Error fetching https://ask.metafilter.com/384394/FashionFilter-Meeting-Mom: HTTPSConnectionPool(host='ask.metafilter.com', port=443): Read timed out. (read timeout=30)
+2026-01-13 15:27:04,940 - gender_bias_research.metafilter_scraper - INFO - Progress: 30/100 scraped, 24 inserted, 607 answers, 1 errors
+2026-01-13 15:27:34,773 - gender_bias_research.metafilter_scraper - INFO - Progress: 40/100 scraped, 34 inserted, 935 answers, 1 errors
+2026-01-13 15:28:18,601 - gender_bias_research.metafilter_scraper - INFO - Progress: 50/100 scraped, 44 inserted, 1148 answers, 1 errors
+2026-01-13 15:28:53,899 - gender_bias_research.metafilter_scraper - ERROR - Error fetching https://ask.metafilter.com/380098/I-love-my-spouse-but-I-hated-living-in-their-hometown: HTTPSConnectionPool(host='ask.metafilter.com', port=443): Read timed out. (read timeout=30)
+2026-01-13 15:29:16,422 - gender_bias_research.metafilter_scraper - INFO - Progress: 60/100 scraped, 53 inserted, 1355 answers, 2 errors
+2026-01-13 15:30:11,447 - gender_bias_research.metafilter_scraper - ERROR - Error fetching https://ask.metafilter.com/377296/How-do-you-let-someone-down-after-2-3-dates-sex-included: HTTPSConnectionPool(host='ask.metafilter.com', port=443): Read timed out. (read timeout=30)
+2026-01-13 15:30:14,266 - gender_bias_research.metafilter_scraper - INFO - Progress: 70/100 scraped, 62 inserted, 1575 answers, 3 errors
+2026-01-13 15:30:46,782 - gender_bias_research.metafilter_scraper - ERROR - Error fetching https://ask.metafilter.com/377219/Gentle-sci-fi-set-on-space-stations-or-ships: HTTPSConnectionPool(host='ask.metafilter.com', port=443): Read timed out. (read timeout=30)
+2026-01-13 15:31:20,408 - gender_bias_research.metafilter_scraper - INFO - Progress: 80/100 scraped, 71 inserted, 1748 answers, 4 errors
+2026-01-13 15:31:48,645 - gender_bias_research.metafilter_scraper - INFO - Progress: 90/100 scraped, 81 inserted, 1968 answers, 4 errors
+2026-01-13 15:32:16,927 - gender_bias_research.metafilter_scraper - INFO - Progress: 100/100 scraped, 91 inserted, 2177 answers, 4 errors
+2026-01-13 15:32:16,928 - gender_bias_research.metafilter_scraper - INFO - Completed: 91 questions and 2177 answers inserted (4 errors)
+2026-01-13 15:32:16,929 - gender_bias_research.main - INFO - Metafilter scraping complete: {
+  "questions_scraped": 100,
+  "questions_inserted": 91,
+  "answers_inserted": 2177,
+  "errors": 4
+}

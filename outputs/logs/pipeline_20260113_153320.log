@@ -1,0 +1,8 @@
+2026-01-13 15:33:20,431 - gender_bias_research.main - WARNING - Some environment variables are not set:
+2026-01-13 15:33:20,431 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_ID: Required for Reddit scraping
+2026-01-13 15:33:20,431 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_SECRET: Required for Reddit scraping
+2026-01-13 15:33:20,431 - gender_bias_research.main - WARNING -   - ANTHROPIC_API_KEY: Required for LLM classification
+2026-01-13 15:33:20,431 - gender_bias_research.main - WARNING - Set these before running the corresponding pipeline phases.
+2026-01-13 15:33:20,431 - gender_bias_research.main - INFO - ============================================================
+2026-01-13 15:33:20,432 - gender_bias_research.main - INFO - Pipeline Status
+2026-01-13 15:33:20,432 - gender_bias_research.main - INFO - ============================================================
