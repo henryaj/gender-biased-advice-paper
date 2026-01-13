@@ -203,6 +203,20 @@ def run_visualizations(analysis_results=None):
     return saved_files
 
 
+def run_generate_report():
+    """Generate full analysis report with tables and charts."""
+    logger.info("=" * 60)
+    logger.info("PHASE: Report Generation")
+    logger.info("=" * 60)
+
+    from src.analysis.generate_report import generate_full_report
+
+    results = generate_full_report()
+    logger.info(f"Report generated: {results.get('report_path', 'N/A')}")
+
+    return results
+
+
 def show_status():
     """Show current pipeline status."""
     logger.info("=" * 60)
@@ -326,6 +340,8 @@ def main():
     parser.add_argument("--bradley-terry", action="store_true", help="Compute BT scores")
     parser.add_argument("--analyze", action="store_true", help="Run analysis")
     parser.add_argument("--visualize", action="store_true", help="Generate visualizations")
+    parser.add_argument("--generate-report", action="store_true",
+                        help="Generate full analysis report with tables and charts")
     parser.add_argument("--status", action="store_true", help="Show pipeline status")
 
     # Options
@@ -377,6 +393,8 @@ def main():
             with open(results_path) as f:
                 analysis_results = json.load(f)
         run_visualizations(analysis_results)
+    elif args.generate_report:
+        run_generate_report()
     elif args.status:
         show_status()
     else:

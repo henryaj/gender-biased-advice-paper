@@ -2,7 +2,9 @@
 
 import json
 import sqlite3
-from flask import Flask, render_template, request, g
+from pathlib import Path
+from collections import defaultdict
+from flask import Flask, render_template, request, g, send_file
 
 app = Flask(__name__)
 DATABASE = '../data/research.db'
@@ -236,6 +238,125 @@ def post_detail(post_id):
         comments.append(comment)
 
     return render_template('post_detail.html', post=post, comments=comments)
+
+
+@app.route('/analysis')
+def analysis():
+    """Show analysis dashboard with tables and charts."""
+    db = get_db()
+
+    # Dataset summary
+    stats = {}
+    stats['total_posts'] = db.execute('SELECT COUNT(*) FROM posts').fetchone()[0]
+    stats['total_comments'] = db.execute('SELECT COUNT(*) FROM comments').fetchone()[0]
+    stats['classified_posts'] = db.execute('SELECT COUNT(*) FROM post_classifications').fetchone()[0]
+    stats['relationship_posts'] = db.execute(
+        'SELECT COUNT(*) FROM post_classifications WHERE is_relationship_advice = 1'
+    ).fetchone()[0]
+    stats['classified_comments'] = db.execute('SELECT COUNT(*) FROM comment_classifications').fetchone()[0]
+
+    # Gender distribution with confidence
+    gender_data = db.execute('''
+        SELECT poster_gender, COUNT(*) as count, AVG(gender_confidence) as avg_conf
+        FROM post_classifications
+        WHERE is_relationship_advice = 1
+        GROUP BY poster_gender
+        ORDER BY count DESC
+    ''').fetchall()
+
+    # Severity by gender crosstab
+    severity_by_gender = db.execute('''
+        SELECT poster_gender, situation_severity, COUNT(*) as count
+        FROM post_classifications
+        WHERE is_relationship_advice = 1
+          AND poster_gender IN ('male', 'female')
+          AND situation_severity IS NOT NULL
+        GROUP BY poster_gender, situation_severity
+    ''').fetchall()
+
+    # Fault by gender crosstab
+    fault_by_gender = db.execute('''
+        SELECT poster_gender, op_fault, COUNT(*) as count
+        FROM post_classifications
+        WHERE is_relationship_advice = 1
+          AND poster_gender IN ('male', 'female')
+          AND op_fault IS NOT NULL
+        GROUP BY poster_gender, op_fault
+    ''').fetchall()
+
+    # Tone frequencies by gender
+    tone_data = db.execute('''
+        SELECT pc.poster_gender, cc.tone_labels
+        FROM comment_classifications cc
+        JOIN comments c ON cc.comment_id = c.comment_id
+        JOIN post_classifications pc ON c.post_id = pc.post_id
+        WHERE pc.is_relationship_advice = 1
+          AND pc.poster_gender IN ('male', 'female')
+    ''').fetchall()
+
+    # Count tones
+    male_tones = defaultdict(int)
+    female_tones = defaultdict(int)
+    male_count = 0
+    female_count = 0
+
+    for row in tone_data:
+        tones = json.loads(row['tone_labels']) if row['tone_labels'] else []
+        if row['poster_gender'] == 'male':
+            male_count += 1
+            for t in tones:
+                male_tones[t] += 1
+        else:
+            female_count += 1
+            for t in tones:
+                female_tones[t] += 1
+
+    all_tones = sorted(set(male_tones.keys()) | set(female_tones.keys()))
+    tone_table = []
+    for tone in all_tones:
+        tone_table.append({
+            'tone': tone,
+            'male_count': male_tones[tone],
+            'female_count': female_tones[tone],
+            'male_pct': f"{male_tones[tone]/male_count*100:.1f}%" if male_count > 0 else "0%",
+            'female_pct': f"{female_tones[tone]/female_count*100:.1f}%" if female_count > 0 else "0%"
+        })
+
+    # Advice direction by gender
+    direction_data = db.execute('''
+        SELECT pc.poster_gender, cc.advice_direction, COUNT(*) as count
+        FROM comment_classifications cc
+        JOIN comments c ON cc.comment_id = c.comment_id
+        JOIN post_classifications pc ON c.post_id = pc.post_id
+        WHERE pc.is_relationship_advice = 1
+          AND pc.poster_gender IN ('male', 'female')
+          AND cc.advice_direction IS NOT NULL
+        GROUP BY pc.poster_gender, cc.advice_direction
+    ''').fetchall()
+
+    # Check if HTML report exists
+    report_path = Path(__file__).parent.parent / 'outputs' / 'report.html'
+    report_exists = report_path.exists()
+
+    return render_template('analysis.html',
+                          stats=stats,
+                          gender_data=gender_data,
+                          severity_by_gender=severity_by_gender,
+                          fault_by_gender=fault_by_gender,
+                          tone_table=tone_table,
+                          direction_data=direction_data,
+                          male_count=male_count,
+                          female_count=female_count,
+                          report_exists=report_exists)
+
+
+@app.route('/analysis/report')
+def download_report():
+    """Download the HTML analysis report."""
+    report_path = Path(__file__).parent.parent / 'outputs' / 'report.html'
+    if report_path.exists():
+        return send_file(report_path, as_attachment=True, download_name='gender_bias_report.html')
+    return "Report not generated yet. Run: python main.py --generate-report", 404
 
 
 if __name__ == '__main__':

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis - Research Explorer{% endblock %}
+
+{% block content %}
+<h1>Analysis Dashboard</h1>
+
+<div class="card">
+    <h2>Dataset Summary</h2>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="number">{{ stats.total_posts }}</div>
+            <div class="label">Total Posts</div>
+        </div>
+        <div class="stat-box">
+            <div class="number">{{ stats.total_comments }}</div>
+            <div class="label">Total Comments</div>
+        </div>
+        <div class="stat-box" style="background: #27ae60;">
+            <div class="number">{{ stats.relationship_posts }}</div>
+            <div class="label">Relationship Posts</div>
+        </div>
+        <div class="stat-box" style="background: #9b59b6;">
+            <div class="number">{{ stats.classified_comments }}</div>
+            <div class="label">Classified Comments</div>
+        </div>
+    </div>
+
+    {% if report_exists %}
+    <p style="margin-top: 20px;">
+        <a href="/analysis/report" class="btn" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;">
+            Download Full HTML Report
+        </a>
+    </p>
+    {% else %}
+    <p style="margin-top: 20px; color: #666;">
+        Run <code>python main.py --generate-report</code> to generate the full HTML report with charts.
+    </p>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="card">
+        <h2>Gender Distribution</h2>
+        <table>
+            <tr>
+                <th>Gender</th>
+                <th>Count</th>
+                <th>%</th>
+                <th>Avg Confidence</th>
+            </tr>
+            {% for row in gender_data %}
+            <tr>
+                <td><span class="badge badge-{{ row.poster_gender }}">{{ row.poster_gender }}</span></td>
+                <td>{{ row.count }}</td>
+                <td>{{ "%.1f"|format(row.count * 100 / stats.relationship_posts) }}%</td>
+                <td>{{ "%.0f"|format(row.avg_conf * 100) if row.avg_conf else "N/A" }}%</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Severity by Gender</h2>
+        <table>
+            <tr>
+                <th>Gender</th>
+                <th>Low</th>
+                <th>Medium</th>
+                <th>High</th>
+            </tr>
+            {% set male_sev = {} %}
+            {% set female_sev = {} %}
+            {% for row in severity_by_gender %}
+                {% if row.poster_gender == 'male' %}
+                    {% set _ = male_sev.update({row.situation_severity: row.count}) %}
+                {% else %}
+                    {% set _ = female_sev.update({row.situation_severity: row.count}) %}
+                {% endif %}
+            {% endfor %}
+            <tr>
+                <td><span class="badge badge-male">male</span></td>
+                <td>{{ male_sev.get('low', 0) }}</td>
+                <td>{{ male_sev.get('medium', 0) }}</td>
+                <td>{{ male_sev.get('high', 0) }}</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-female">female</span></td>
+                <td>{{ female_sev.get('low', 0) }}</td>
+                <td>{{ female_sev.get('medium', 0) }}</td>
+                <td>{{ female_sev.get('high', 0) }}</td>
+            </tr>
+        </table>
+        <p class="interpretation">
+            Are men describing more severe situations?
+        </p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="card">
+        <h2>OP Fault by Gender</h2>
+        <table>
+            <tr>
+                <th>Gender</th>
+                <th>None</th>
+                <th>Some</th>
+                <th>Substantial</th>
+                <th>Unclear</th>
+            </tr>
+            {% set male_fault = {} %}
+            {% set female_fault = {} %}
+            {% for row in fault_by_gender %}
+                {% if row.poster_gender == 'male' %}
+                    {% set _ = male_fault.update({row.op_fault: row.count}) %}
+                {% else %}
+                    {% set _ = female_fault.update({row.op_fault: row.count}) %}
+                {% endif %}
+            {% endfor %}
+            <tr>
+                <td><span class="badge badge-male">male</span></td>
+                <td>{{ male_fault.get('none', 0) }}</td>
+                <td>{{ male_fault.get('some', 0) }}</td>
+                <td>{{ male_fault.get('substantial', 0) }}</td>
+                <td>{{ male_fault.get('unclear', 0) }}</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-female">female</span></td>
+                <td>{{ female_fault.get('none', 0) }}</td>
+                <td>{{ female_fault.get('some', 0) }}</td>
+                <td>{{ female_fault.get('substantial', 0) }}</td>
+                <td>{{ female_fault.get('unclear', 0) }}</td>
+            </tr>
+        </table>
+        <p class="interpretation">
+            Are men more at fault in their situations?
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Advice Direction by Gender</h2>
+        <table>
+            <tr>
+                <th>Gender</th>
+                <th>Supportive</th>
+                <th>Critical</th>
+                <th>Mixed</th>
+                <th>Neutral</th>
+            </tr>
+            {% set male_dir = {} %}
+            {% set female_dir = {} %}
+            {% for row in direction_data %}
+                {% if row.poster_gender == 'male' %}
+                    {% set _ = male_dir.update({row.advice_direction: row.count}) %}
+                {% else %}
+                    {% set _ = female_dir.update({row.advice_direction: row.count}) %}
+                {% endif %}
+            {% endfor %}
+            <tr>
+                <td><span class="badge badge-male">male</span></td>
+                <td>{{ male_dir.get('supportive_of_op', 0) }}</td>
+                <td>{{ male_dir.get('critical_of_op', 0) }}</td>
+                <td>{{ male_dir.get('mixed', 0) }}</td>
+                <td>{{ male_dir.get('neutral', 0) }}</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-female">female</span></td>
+                <td>{{ female_dir.get('supportive_of_op', 0) }}</td>
+                <td>{{ female_dir.get('critical_of_op', 0) }}</td>
+                <td>{{ female_dir.get('mixed', 0) }}</td>
+                <td>{{ female_dir.get('neutral', 0) }}</td>
+            </tr>
+        </table>
+        <p class="interpretation">
+            Are comments more critical toward one gender?
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Tone Label Frequencies</h2>
+    <p>Comments on posts by male posters: {{ male_count }} | Comments on posts by female posters: {{ female_count }}</p>
+
+    {% if tone_table %}
+    <table>
+        <tr>
+            <th>Tone</th>
+            <th>Male Count</th>
+            <th>Male %</th>
+            <th>Female Count</th>
+            <th>Female %</th>
+        </tr>
+        {% for row in tone_table %}
+        <tr>
+            <td><span class="tone-tag tone-{{ row.tone }}">{{ row.tone }}</span></td>
+            <td>{{ row.male_count }}</td>
+            <td>{{ row.male_pct }}</td>
+            <td>{{ row.female_count }}</td>
+            <td>{{ row.female_pct }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No tone data available. Classify more comments with <code>python main.py --classify-comments</code></p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Interpretation Notes</h2>
+    <ul>
+        <li><strong>Confound Check:</strong> If men describe higher-severity situations or are more at fault, harsher responses may be justified rather than biased.</li>
+        <li><strong>Advice Direction:</strong> A higher proportion of "critical" responses to one gender could indicate bias.</li>
+        <li><strong>Tone Labels:</strong> Compare positive tones (supportive, encouraging) vs negative tones (critical, blunt) across genders.</li>
+        <li><strong>Statistical Tests:</strong> Full chi-square tests and regression analysis available in the downloadable report.</li>
+    </ul>
+</div>
+
+<style>
+.interpretation {
+    color: #666;
+    font-size: 0.9em;
+    font-style: italic;
+    margin-top: 10px;
+}
+</style>
+{% endblock %}
