@@ -308,20 +308,36 @@ class Database:
     def get_unclassified_comments(
         self,
         relationship_posts_only: bool = True,
+        filter_for_analysis: bool = True,
         limit: Optional[int] = None
     ) -> List[Dict]:
-        """Get comments that haven't been classified yet."""
+        """Get comments that haven't been classified yet.
+
+        Args:
+            relationship_posts_only: Only include comments on relationship posts
+            filter_for_analysis: Apply strict filter criteria for analysis:
+                - problem_category IS NOT NULL (advice-seeking posts)
+                - poster_gender IN ('male', 'female') (known binary gender)
+                - gender_confidence > 0.7 (high confidence)
+            limit: Maximum number of comments to return
+        """
         with self.get_connection() as conn:
             if relationship_posts_only:
                 query = """
                     SELECT c.*, p.title as post_title, p.body as post_body,
-                           pc.brief_situation_summary
+                           pc.brief_situation_summary, pc.poster_gender
                     FROM comments c
                     JOIN posts p ON c.post_id = p.post_id
                     JOIN post_classifications pc ON p.post_id = pc.post_id
                     LEFT JOIN comment_classifications cc ON c.comment_id = cc.comment_id
                     WHERE cc.comment_id IS NULL
                     AND pc.is_relationship_advice = 1
+                """
+                if filter_for_analysis:
+                    query += """
+                    AND pc.problem_category IS NOT NULL
+                    AND pc.poster_gender IN ('male', 'female')
+                    AND pc.gender_confidence > 0.7
                 """
             else:
                 query = """

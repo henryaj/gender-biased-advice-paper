@@ -4,3 +4,5 @@ __pycache__/
 .envrc
 outputs/logs/
 outputs/
+data/*.db
+*.sqlite

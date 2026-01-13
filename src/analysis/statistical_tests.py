@@ -16,6 +16,21 @@ from ..utils.logging import get_logger
 
 logger = get_logger("statistical_tests")
 
+
+class NumpyEncoder(json.JSONEncoder):
+    """Custom JSON encoder for numpy types."""
+    def default(self, obj):
+        if isinstance(obj, (np.bool_, np.bool)):
+            return bool(obj)
+        if isinstance(obj, (np.integer, np.int64, np.int32)):
+            return int(obj)
+        if isinstance(obj, (np.floating, np.float64, np.float32)):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+
+
 OUTPUT_DIR = Path(__file__).parent.parent.parent / "outputs" / "tables"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -707,7 +722,7 @@ class GenderBiasAnalyzer:
         # Save results
         output_path = OUTPUT_DIR / "analysis_results.json"
         with open(output_path, "w") as f:
-            json.dump(all_results, f, indent=2)
+            json.dump(all_results, f, indent=2, cls=NumpyEncoder)
 
         logger.info(f"Results saved to {output_path}")
 
