@@ -15,7 +15,7 @@ from ..utils.logging import get_logger, api_logger
 logger = get_logger("post_classifier")
 
 # Default model for classification
-DEFAULT_MODEL = "claude-sonnet-4-20250514"
+DEFAULT_MODEL = "claude-3-5-haiku-20241022"
 
 # Classification prompt template
 POST_CLASSIFICATION_PROMPT = """Analyze this advice forum post and extract the following information:
