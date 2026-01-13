@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Research Explorer{% endblock %}
+
+{% block content %}
+<h1>Gender Bias Research Explorer</h1>
+
+<div class="card">
+    <h2>Dataset Overview</h2>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="number">{{ stats.total_posts }}</div>
+            <div class="label">Total Posts</div>
+        </div>
+        <div class="stat-box">
+            <div class="number">{{ stats.total_comments }}</div>
+            <div class="label">Total Comments</div>
+        </div>
+        <div class="stat-box" style="background: #27ae60;">
+            <div class="number">{{ stats.classified_posts }}</div>
+            <div class="label">Classified Posts</div>
+        </div>
+        <div class="stat-box" style="background: #e74c3c;">
+            <div class="number">{{ stats.relationship_posts }}</div>
+            <div class="label">Relationship Posts</div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="card">
+        <h2>Gender Distribution</h2>
+        <table>
+            <tr><th>Gender</th><th>Count</th><th>%</th></tr>
+            {% for row in gender_counts %}
+            <tr>
+                <td><span class="badge badge-{{ row.poster_gender }}">{{ row.poster_gender }}</span></td>
+                <td>{{ row.count }}</td>
+                <td>{{ "%.1f"|format(row.count * 100 / stats.relationship_posts) }}%</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <p style="margin-top: 15px;">
+            <a href="/posts?gender=male">View male posts &rarr;</a><br>
+            <a href="/posts?gender=female">View female posts &rarr;</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Relationship Types</h2>
+        <table>
+            <tr><th>Type</th><th>Count</th><th>%</th></tr>
+            {% for row in type_counts %}
+            <tr>
+                <td><span class="badge badge-{{ row.relationship_type }}">{{ row.relationship_type }}</span></td>
+                <td>{{ row.count }}</td>
+                <td>{{ "%.1f"|format(row.count * 100 / stats.relationship_posts) }}%</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Quick Links</h2>
+    <p>
+        <a href="/posts">Browse all relationship posts</a> |
+        <a href="/posts?gender=male">Male posters</a> |
+        <a href="/posts?gender=female">Female posters</a> |
+        <a href="/posts?type=romantic">Romantic relationships</a>
+    </p>
+</div>
+{% endblock %}

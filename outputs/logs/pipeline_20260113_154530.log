@@ -1,7 +1,0 @@
-2026-01-13 15:45:30,411 - gender_bias_research.main - WARNING - Some environment variables are not set:
-2026-01-13 15:45:30,411 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_ID: Required for Reddit scraping
-2026-01-13 15:45:30,411 - gender_bias_research.main - WARNING -   - REDDIT_CLIENT_SECRET: Required for Reddit scraping
-2026-01-13 15:45:30,411 - gender_bias_research.main - WARNING - Set these before running the corresponding pipeline phases.
-2026-01-13 15:45:30,411 - gender_bias_research.main - INFO - ============================================================
-2026-01-13 15:45:30,411 - gender_bias_research.main - INFO - PHASE: Post Classification
-2026-01-13 15:45:30,411 - gender_bias_research.main - INFO - ============================================================

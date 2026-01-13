@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Research Explorer{% endblock %}
+
+{% block content %}
+<p><a href="/posts">&larr; Back to posts</a></p>
+
+<div class="card">
+    <h1>{{ post.title }}</h1>
+
+    <p>
+        <span class="badge badge-{{ post.poster_gender }}">{{ post.poster_gender }}</span>
+        {% if post.gender_confidence %}
+        <span class="confidence">({{ "%.0f"|format(post.gender_confidence * 100) }}% confidence)</span>
+        {% endif %}
+        &nbsp;
+        <span class="badge badge-{{ post.relationship_type }}">{{ post.relationship_type }}</span>
+        &nbsp;
+        <span style="color: #666;">by {{ post.author }} &middot; {{ post.timestamp }}</span>
+    </p>
+
+    {% if post.brief_situation_summary %}
+    <p><strong>Summary:</strong> {{ post.brief_situation_summary }}</p>
+    {% endif %}
+
+    <h3>Original Post</h3>
+    <div class="post-body">{{ post.body }}</div>
+</div>
+
+<div class="card">
+    <h2>Comments ({{ comments|length }})</h2>
+
+    {% for comment in comments %}
+    <div class="comment">
+        <div class="comment-meta">
+            <strong>{{ comment.author }}</strong>
+            &middot; {{ comment.timestamp }}
+            {% if comment.favorites %}
+            &middot; <span title="favorites">{{ comment.favorites }} ★</span>
+            {% endif %}
+            {% if comment.harshness_score %}
+            &middot; Harshness: {{ comment.harshness_score }}/10
+            {% endif %}
+            {% if comment.advice_direction %}
+            &middot; {{ comment.advice_direction }}
+            {% endif %}
+        </div>
+        <div style="white-space: pre-wrap;">{{ comment.body }}</div>
+    </div>
+    {% else %}
+    <p>No comments yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
