@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Spot-Check Validation{% endblock %}
+
+{% block content %}
+<style>
+    .validation-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .full-width { grid-column: 1 / -1; }
+    .context-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+    }
+    .comment-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid #3498db;
+        font-size: 1.05em;
+        line-height: 1.7;
+    }
+    .classification-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid #9b59b6;
+    }
+    .validation-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .validation-buttons label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .validation-buttons input[type="radio"] { display: none; }
+    .validation-buttons input[type="radio"]:checked + span {
+        transform: scale(1.05);
+    }
+    .btn-correct { background: #d4edda; color: #155724; border: 2px solid #28a745; }
+    .btn-correct:has(input:checked) { background: #28a745; color: white; }
+    .btn-incorrect { background: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
+    .btn-incorrect:has(input:checked) { background: #dc3545; color: white; }
+    .btn-uncertain { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+    .btn-uncertain:has(input:checked) { background: #ffc107; color: #333; }
+    .tone-validation {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    .tone-name {
+        min-width: 120px;
+        font-weight: 500;
+    }
+    .tone-buttons { display: flex; gap: 5px; }
+    .tone-buttons label {
+        padding: 4px 10px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 0.85em;
+    }
+    .submit-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    .btn-submit {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1em;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .btn-submit:hover { background: #219a52; }
+    .btn-skip {
+        background: #95a5a6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .progress-bar {
+        background: #e9ecef;
+        border-radius: 20px;
+        height: 24px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    .progress-fill {
+        background: linear-gradient(90deg, #27ae60, #2ecc71);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.85em;
+    }
+    .correction-dropdown {
+        margin-top: 10px;
+        display: none;
+    }
+    .correction-dropdown.show { display: block; }
+    .no-comments {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    .no-comments h2 { color: #27ae60; }
+</style>
+
+<h1>Spot-Check Validation</h1>
+
+<!-- Progress and Stats -->
+<div class="card">
+    <div class="stats-grid">
+        <div class="stat-box" style="background: #27ae60;">
+            <div class="number">{{ stats.total_validated }}</div>
+            <div class="label">Validated</div>
+        </div>
+        <div class="stat-box" style="background: #3498db;">
+            <div class="number">{{ stats.total_classified }}</div>
+            <div class="label">Total Classified</div>
+        </div>
+        <div class="stat-box" style="background: {% if stats.agreement_rate and stats.agreement_rate > 0.8 %}#27ae60{% elif stats.agreement_rate and stats.agreement_rate > 0.6 %}#f39c12{% else %}#e74c3c{% endif %};">
+            <div class="number">{% if stats.agreement_rate %}{{ "%.0f"|format(stats.agreement_rate * 100) }}%{% else %}--{% endif %}</div>
+            <div class="label">Agreement Rate</div>
+        </div>
+    </div>
+    {% if stats.total_classified > 0 %}
+    <div class="progress-bar" style="margin-top: 15px;">
+        <div class="progress-fill" style="width: {{ (stats.total_validated / stats.total_classified * 100)|round }}%;">
+            {{ stats.total_validated }} / {{ stats.total_classified }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card">
+    <form method="get" class="filters">
+        <select name="gender" onchange="this.form.submit()">
+            <option value="">All Genders</option>
+            {% for g in genders %}
+            <option value="{{ g.poster_gender }}" {% if current_gender == g.poster_gender %}selected{% endif %}>
+                {{ g.poster_gender|capitalize }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="direction" onchange="this.form.submit()">
+            <option value="">All Directions</option>
+            {% for d in directions %}
+            <option value="{{ d }}" {% if current_direction == d %}selected{% endif %}>
+                {{ d|replace('_', ' ')|title }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="tone" onchange="this.form.submit()">
+            <option value="">All Tones</option>
+            {% for t in harsh_tones %}
+            <option value="{{ t }}" {% if current_tone == t %}selected{% endif %} style="color: #721c24;">
+                {{ t|capitalize }} (harsh)
+            </option>
+            {% endfor %}
+        </select>
+        <a href="/validate" class="btn-skip">Reset</a>
+    </form>
+</div>
+
+{% if comment %}
+<form method="post">
+    <input type="hidden" name="comment_id" value="{{ comment.comment_id }}">
+    <input type="hidden" name="filter_gender" value="{{ current_gender }}">
+    <input type="hidden" name="filter_direction" value="{{ current_direction }}">
+
+    <div class="validation-container">
+        <!-- Post Context -->
+        <div class="card">
+            <h3>Post Context</h3>
+            <div class="context-box">
+                <strong>{{ comment.post_title }}</strong>
+                <div style="margin-top: 10px;">
+                    <span class="badge badge-{{ comment.poster_gender }}">{{ comment.poster_gender|capitalize }}</span>
+                    <span class="confidence">({{ "%.0f"|format(comment.gender_confidence * 100) }}% confidence)</span>
+                </div>
+                {% if comment.brief_situation_summary %}
+                <p style="margin-top: 10px; color: #666;">{{ comment.brief_situation_summary }}</p>
+                {% endif %}
+                <div style="margin-top: 10px; font-size: 0.9em;">
+                    {% if comment.situation_severity %}
+                    <span class="badge badge-{{ comment.situation_severity }}">{{ comment.situation_severity }}</span>
+                    {% endif %}
+                    {% if comment.op_fault %}
+                    <span class="badge badge-{{ comment.op_fault }}">fault: {{ comment.op_fault }}</span>
+                    {% endif %}
+                    {% if comment.problem_category %}
+                    <span class="badge badge-category">{{ comment.problem_category }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Classification to Validate -->
+        <div class="card">
+            <h3>LLM Classification</h3>
+            <div class="classification-box">
+                <!-- Advice Direction -->
+                <div style="margin-bottom: 20px;">
+                    <strong>Advice Direction:</strong>
+                    <span class="badge badge-direction-{{ comment.advice_direction }}">
+                        {{ comment.advice_direction|replace('_', ' ')|title }}
+                    </span>
+                    <input type="hidden" name="direction_value" value="{{ comment.advice_direction }}">
+
+                    <div class="validation-buttons">
+                        <label class="btn-correct">
+                            <input type="radio" name="direction_judgment" value="correct">
+                            <span>✓ Correct</span>
+                        </label>
+                        <label class="btn-incorrect">
+                            <input type="radio" name="direction_judgment" value="incorrect" onclick="document.getElementById('correction-dropdown').classList.add('show')">
+                            <span>✗ Incorrect</span>
+                        </label>
+                        <label class="btn-uncertain">
+                            <input type="radio" name="direction_judgment" value="uncertain">
+                            <span>? Uncertain</span>
+                        </label>
+                    </div>
+
+                    <div id="correction-dropdown" class="correction-dropdown">
+                        <label>Correct value:
+                            <select name="direction_correction">
+                                <option value="">-- Select --</option>
+                                <option value="supportive_of_op">Supportive of OP</option>
+                                <option value="critical_of_op">Critical of OP</option>
+                                <option value="neutral">Neutral</option>
+                                <option value="mixed">Mixed</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Tone Labels -->
+                <div>
+                    <strong>Tone Labels:</strong>
+                    {% for tone in tone_labels %}
+                    <input type="hidden" name="tone_labels" value="{{ tone }}">
+                    <div class="tone-validation">
+                        <span class="tone-name tone-tag tone-{{ tone }}">{{ tone }}</span>
+                        <div class="tone-buttons">
+                            <label class="btn-correct" style="padding: 4px 10px;">
+                                <input type="radio" name="tone_{{ tone }}" value="correct">
+                                <span>✓</span>
+                            </label>
+                            <label class="btn-incorrect" style="padding: 4px 10px;">
+                                <input type="radio" name="tone_{{ tone }}" value="incorrect">
+                                <span>✗</span>
+                            </label>
+                            <label class="btn-uncertain" style="padding: 4px 10px;">
+                                <input type="radio" name="tone_{{ tone }}" value="uncertain">
+                                <span>?</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Comment to Validate -->
+        <div class="card full-width">
+            <h3>Comment to Validate</h3>
+            <div class="comment-box">
+                {{ comment.comment_body }}
+            </div>
+            <div class="comment-meta" style="margin-top: 10px;">
+                By {{ comment.author }} · Score: {{ comment.score }}
+            </div>
+        </div>
+    </div>
+
+    <div class="submit-row">
+        <a href="/validate?gender={{ current_gender }}&direction={{ current_direction }}" class="btn-skip">
+            Skip This One
+        </a>
+        <button type="submit" class="btn-submit">
+            Save & Next →
+        </button>
+    </div>
+</form>
+
+{% else %}
+<div class="card no-comments">
+    <h2>All Done!</h2>
+    <p>No more unvalidated comments matching your filters.</p>
+    <p style="margin-top: 20px;">
+        <a href="/validate" class="btn-skip">Reset Filters</a>
+        <a href="/analysis" style="margin-left: 10px;">View Analysis →</a>
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

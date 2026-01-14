@@ -93,6 +93,18 @@ CREATE TABLE IF NOT EXISTS comment_scores (
     last_updated DATETIME
 );
 
+-- Human validation of LLM classifications
+CREATE TABLE IF NOT EXISTS classification_validations (
+    validation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    comment_id TEXT NOT NULL REFERENCES comments(comment_id),
+    field_name TEXT NOT NULL,
+    llm_value TEXT NOT NULL,
+    human_judgment TEXT NOT NULL,
+    human_correction TEXT,
+    notes TEXT,
+    validated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_posts_source ON posts(source_id);
 CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
@@ -103,6 +115,7 @@ CREATE INDEX IF NOT EXISTS idx_post_class_fault ON post_classifications(op_fault
 CREATE INDEX IF NOT EXISTS idx_post_class_category ON post_classifications(problem_category);
 CREATE INDEX IF NOT EXISTS idx_comment_class_direction ON comment_classifications(advice_direction);
 CREATE INDEX IF NOT EXISTS idx_pairwise_dimension ON pairwise_comparisons(dimension);
+CREATE INDEX IF NOT EXISTS idx_validations_comment ON classification_validations(comment_id);
 """
 
 # Initial source data
@@ -568,6 +581,135 @@ class Database:
             stats["pairwise_comparisons_by_dimension"] = {row["dimension"]: row["count"] for row in rows}
 
             return stats
+
+    # Validation operations
+    def get_random_unvalidated_comment(
+        self,
+        gender_filter: Optional[str] = None,
+        direction_filter: Optional[str] = None
+    ) -> Optional[Dict]:
+        """Get a random classified comment that hasn't been validated yet."""
+        with self.get_connection() as conn:
+            query = """
+                SELECT c.comment_id, c.body as comment_body, c.author, c.score,
+                       p.post_id, p.title as post_title, p.body as post_body,
+                       pc.poster_gender, pc.gender_confidence, pc.brief_situation_summary,
+                       pc.situation_severity, pc.op_fault, pc.problem_category,
+                       cc.advice_direction, cc.tone_labels, cc.is_advice
+                FROM comments c
+                JOIN posts p ON c.post_id = p.post_id
+                JOIN post_classifications pc ON p.post_id = pc.post_id
+                JOIN comment_classifications cc ON c.comment_id = cc.comment_id
+                WHERE cc.is_advice = 1
+                AND c.comment_id NOT IN (
+                    SELECT DISTINCT comment_id FROM classification_validations
+                )
+            """
+            params = []
+
+            if gender_filter and gender_filter != 'all':
+                query += " AND pc.poster_gender = ?"
+                params.append(gender_filter)
+
+            if direction_filter and direction_filter != 'all':
+                query += " AND cc.advice_direction = ?"
+                params.append(direction_filter)
+
+            query += " ORDER BY RANDOM() LIMIT 1"
+
+            row = conn.execute(query, params).fetchone()
+            if row:
+                result = dict(row)
+                # Parse tone_labels JSON
+                if result.get('tone_labels'):
+                    result['tone_labels'] = json.loads(result['tone_labels'])
+                return result
+            return None
+
+    def save_validation(
+        self,
+        comment_id: str,
+        field_name: str,
+        llm_value: str,
+        human_judgment: str,
+        human_correction: Optional[str] = None,
+        notes: Optional[str] = None
+    ) -> int:
+        """Save a validation judgment."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO classification_validations
+                (comment_id, field_name, llm_value, human_judgment, human_correction, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (comment_id, field_name, llm_value, human_judgment, human_correction, notes))
+            return cursor.lastrowid
+
+    def get_validation_stats(self) -> Dict:
+        """Get validation statistics."""
+        with self.get_connection() as conn:
+            stats = {}
+
+            # Total validations
+            total = conn.execute(
+                "SELECT COUNT(*) FROM classification_validations"
+            ).fetchone()[0]
+            stats['total_validations'] = total
+
+            # Unique comments validated
+            unique_comments = conn.execute(
+                "SELECT COUNT(DISTINCT comment_id) FROM classification_validations"
+            ).fetchone()[0]
+            stats['unique_comments_validated'] = unique_comments
+
+            # Total classified comments
+            total_classified = conn.execute(
+                "SELECT COUNT(*) FROM comment_classifications WHERE is_advice = 1"
+            ).fetchone()[0]
+            stats['total_classified'] = total_classified
+
+            # Agreement rates by field
+            for field in ['advice_direction', 'tone_labels']:
+                row = conn.execute("""
+                    SELECT
+                        COUNT(*) as total,
+                        SUM(CASE WHEN human_judgment = 'correct' THEN 1 ELSE 0 END) as correct,
+                        SUM(CASE WHEN human_judgment = 'incorrect' THEN 1 ELSE 0 END) as incorrect,
+                        SUM(CASE WHEN human_judgment = 'uncertain' THEN 1 ELSE 0 END) as uncertain
+                    FROM classification_validations
+                    WHERE field_name = ?
+                """, (field,)).fetchone()
+
+                if row and row['total'] > 0:
+                    stats[f'{field}_total'] = row['total']
+                    stats[f'{field}_correct'] = row['correct']
+                    stats[f'{field}_incorrect'] = row['incorrect']
+                    stats[f'{field}_uncertain'] = row['uncertain']
+                    stats[f'{field}_agreement'] = row['correct'] / row['total'] if row['total'] > 0 else 0
+
+            return stats
+
+    def get_comment_for_validation(self, comment_id: str) -> Optional[Dict]:
+        """Get a specific comment with all context for validation."""
+        with self.get_connection() as conn:
+            row = conn.execute("""
+                SELECT c.comment_id, c.body as comment_body, c.author, c.score,
+                       p.post_id, p.title as post_title, p.body as post_body,
+                       pc.poster_gender, pc.gender_confidence, pc.brief_situation_summary,
+                       pc.situation_severity, pc.op_fault, pc.problem_category,
+                       cc.advice_direction, cc.tone_labels, cc.is_advice
+                FROM comments c
+                JOIN posts p ON c.post_id = p.post_id
+                JOIN post_classifications pc ON p.post_id = pc.post_id
+                JOIN comment_classifications cc ON c.comment_id = cc.comment_id
+                WHERE c.comment_id = ?
+            """, (comment_id,)).fetchone()
+
+            if row:
+                result = dict(row)
+                if result.get('tone_labels'):
+                    result['tone_labels'] = json.loads(result['tone_labels'])
+                return result
+            return None
 
 
 # Global database instance

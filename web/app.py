@@ -4,7 +4,7 @@ import json
 import sqlite3
 from pathlib import Path
 from collections import defaultdict
-from flask import Flask, render_template, request, g, send_file
+from flask import Flask, render_template, request, g, send_file, redirect
 
 app = Flask(__name__)
 DATABASE = '../data/research.db'
@@ -357,6 +357,150 @@ def download_report():
     if report_path.exists():
         return send_file(report_path, as_attachment=True, download_name='gender_bias_report.html')
     return "Report not generated yet. Run: python main.py --generate-report", 404
+
+
+@app.route('/validate', methods=['GET', 'POST'])
+def validate():
+    """Spot-check validation interface for LLM classifications."""
+    db = get_db()
+
+    # Handle POST (save validation)
+    if request.method == 'POST':
+        comment_id = request.form.get('comment_id')
+
+        # Save advice_direction validation
+        direction_judgment = request.form.get('direction_judgment')
+        if direction_judgment:
+            direction_value = request.form.get('direction_value')
+            direction_correction = request.form.get('direction_correction') if direction_judgment == 'incorrect' else None
+            db.execute('''
+                INSERT INTO classification_validations
+                (comment_id, field_name, llm_value, human_judgment, human_correction)
+                VALUES (?, 'advice_direction', ?, ?, ?)
+            ''', [comment_id, direction_value, direction_judgment, direction_correction])
+
+        # Save tone label validations
+        tone_labels = request.form.getlist('tone_labels')
+        for tone in tone_labels:
+            tone_judgment = request.form.get(f'tone_{tone}')
+            if tone_judgment:
+                db.execute('''
+                    INSERT INTO classification_validations
+                    (comment_id, field_name, llm_value, human_judgment)
+                    VALUES (?, 'tone_labels', ?, ?)
+                ''', [comment_id, tone, tone_judgment])
+
+        db.commit()
+
+        # Redirect to next comment (with same filters)
+        gender = request.form.get('filter_gender', '')
+        direction = request.form.get('filter_direction', '')
+        return redirect(f'/validate?gender={gender}&direction={direction}')
+
+    # GET: Show validation form
+    gender_filter = request.args.get('gender', '')
+    direction_filter = request.args.get('direction', '')
+    tone_filter = request.args.get('tone', '')  # Filter for specific tone labels
+    comment_id = request.args.get('comment_id', '')
+
+    # Get comment to validate
+    if comment_id:
+        # Specific comment requested
+        comment = db.execute('''
+            SELECT c.comment_id, c.body as comment_body, c.author, c.score,
+                   p.post_id, p.title as post_title,
+                   pc.poster_gender, pc.gender_confidence, pc.brief_situation_summary,
+                   pc.situation_severity, pc.op_fault, pc.problem_category,
+                   cc.advice_direction, cc.tone_labels
+            FROM comments c
+            JOIN posts p ON c.post_id = p.post_id
+            JOIN post_classifications pc ON p.post_id = pc.post_id
+            JOIN comment_classifications cc ON c.comment_id = cc.comment_id
+            WHERE c.comment_id = ?
+        ''', [comment_id]).fetchone()
+    else:
+        # Random unvalidated comment
+        query = '''
+            SELECT c.comment_id, c.body as comment_body, c.author, c.score,
+                   p.post_id, p.title as post_title,
+                   pc.poster_gender, pc.gender_confidence, pc.brief_situation_summary,
+                   pc.situation_severity, pc.op_fault, pc.problem_category,
+                   cc.advice_direction, cc.tone_labels
+            FROM comments c
+            JOIN posts p ON c.post_id = p.post_id
+            JOIN post_classifications pc ON p.post_id = pc.post_id
+            JOIN comment_classifications cc ON c.comment_id = cc.comment_id
+            WHERE cc.is_advice = 1
+            AND c.comment_id NOT IN (
+                SELECT DISTINCT comment_id FROM classification_validations
+                WHERE field_name = 'advice_direction'
+            )
+        '''
+        params = []
+
+        if gender_filter:
+            query += ' AND pc.poster_gender = ?'
+            params.append(gender_filter)
+        if direction_filter:
+            query += ' AND cc.advice_direction = ?'
+            params.append(direction_filter)
+        if tone_filter:
+            # Filter for comments containing specific tone label
+            query += ' AND cc.tone_labels LIKE ?'
+            params.append(f'%"{tone_filter}"%')
+
+        query += ' ORDER BY RANDOM() LIMIT 1'
+        comment = db.execute(query, params).fetchone()
+
+    # Parse tone labels if present
+    if comment and comment['tone_labels']:
+        try:
+            tone_labels = json.loads(comment['tone_labels'])
+        except:
+            tone_labels = []
+    else:
+        tone_labels = []
+
+    # Get validation stats
+    stats = {}
+    stats['total_validated'] = db.execute(
+        "SELECT COUNT(DISTINCT comment_id) FROM classification_validations WHERE field_name = 'advice_direction'"
+    ).fetchone()[0]
+    stats['total_classified'] = db.execute(
+        'SELECT COUNT(*) FROM comment_classifications WHERE is_advice = 1'
+    ).fetchone()[0]
+
+    # Agreement rate
+    agreement = db.execute('''
+        SELECT
+            SUM(CASE WHEN human_judgment = 'correct' THEN 1 ELSE 0 END) as correct,
+            COUNT(*) as total
+        FROM classification_validations
+        WHERE field_name = 'advice_direction'
+    ''').fetchone()
+    if agreement['total'] > 0:
+        stats['agreement_rate'] = agreement['correct'] / agreement['total']
+    else:
+        stats['agreement_rate'] = None
+
+    # Filter options
+    genders = db.execute('''
+        SELECT DISTINCT poster_gender FROM post_classifications
+        WHERE is_relationship_advice = 1 AND poster_gender IN ('male', 'female')
+    ''').fetchall()
+    directions = ['supportive_of_op', 'critical_of_op', 'neutral', 'mixed']
+    harsh_tones = ['harsh', 'judgmental', 'blaming', 'condescending', 'dismissive', 'hostile']
+
+    return render_template('validate.html',
+                          comment=comment,
+                          tone_labels=tone_labels,
+                          stats=stats,
+                          genders=genders,
+                          directions=directions,
+                          harsh_tones=harsh_tones,
+                          current_gender=gender_filter,
+                          current_direction=direction_filter,
+                          current_tone=tone_filter)
 
 
 if __name__ == '__main__':

@@ -42,19 +42,35 @@ Please analyze the comment and return a JSON object with these fields:
    - null: Only if is_advice is false
 
 3. "tone_labels": array of applicable tone descriptors
-   Select ALL that apply from this list:
-   - "harsh": Blunt, severe, potentially hurtful language
+   Select ONLY labels that clearly apply. Be conservative - when uncertain, don't include the label.
+
+   POSITIVE TONES:
    - "gentle": Soft, considerate, careful phrasing
    - "empathetic": Shows understanding of OP's feelings
-   - "judgmental": Passes moral judgment on OP
    - "constructive": Offers actionable, helpful suggestions
-   - "dismissive": Minimizes OP's concerns or feelings
    - "understanding": Acknowledges OP's perspective
-   - "condescending": Talks down to OP
    - "encouraging": Positive, motivating
-   - "blaming": Places fault on OP
    - "supportive": Emotionally supportive
-   - "hostile": Aggressive or antagonistic
+
+   NEGATIVE TONES (apply conservatively - require clear evidence):
+   - "harsh": Language that is cruel, insulting, or deliberately hurtful. NOT just direct/firm advice.
+     YES: "You're an idiot" / "What the hell is wrong with you"
+     NO: "You need to grow up" / "This is your responsibility"
+   - "judgmental": Explicitly moralizes or condemns OP as a bad person. NOT just pointing out mistakes.
+     YES: "You're a terrible partner" / "Shame on you"
+     NO: "That was a mistake" / "You should have handled it differently"
+   - "blaming": Explicitly assigns fault in an accusatory way. NOT just identifying OP's role.
+     YES: "This is all your fault" / "You caused this mess"
+     NO: "You contributed to the problem" / "Your actions played a part"
+   - "dismissive": Actively minimizes or mocks OP's concerns. NOT just disagreeing.
+     YES: "Stop whining" / "This isn't a real problem"
+     NO: "I think you're overreacting" / "This might not be as serious as you think"
+   - "condescending": Talks down to OP as if they're stupid. NOT just explaining things.
+     YES: "Obviously you don't understand basic relationships"
+     NO: "Let me explain why this matters"
+   - "hostile": Aggressive, antagonistic, attacking. Clear animosity toward OP.
+     YES: "Go to hell" / "I hope you suffer"
+     NO: Strong disagreement without personal attacks
 
 Return ONLY the JSON object, no other text:
 
