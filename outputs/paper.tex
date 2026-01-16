@@ -124,7 +124,29 @@ The classification prompt was iteratively refined through pilot testing. We deve
 
 \subsection{Validation}
 
-To validate classification accuracy, we conducted human spot-checking of 200 randomly sampled comments. For advice direction---our primary outcome measure---the LLM classifier achieved \textbf{96\% agreement} with human judgment.
+To validate classification accuracy, we conducted human spot-checking using a custom web-based validation interface.
+
+\subsubsection{Sampling Procedure}
+
+We created a stratified random sample of 200 comments: 100 from posts by male authors and 100 from posts by female authors. Comments were interleaved and presented in random order to prevent any systematic ordering effects.
+
+\subsubsection{Blind Validation Protocol}
+
+The validation interface was designed to ensure independent human judgment. For each comment, the reviewer saw:
+
+\begin{itemize}
+    \item The original post (title and body text)
+    \item The comment to be classified
+    \item Four classification options: Supportive of OP, Critical of OP, Neutral, or Mixed
+\end{itemize}
+
+Critically, the reviewer did \textbf{not} see the LLM's classification. The LLM's judgment was stored but hidden during validation, and comparison occurred only after the human submitted their independent rating. This blind design ensures that human judgments were not anchored by the LLM's predictions.
+
+The reviewer could see the original post text, which sometimes contained gender markers (e.g., ``My [30M] girlfriend...''). However, this does not compromise the validation, as the purpose was to assess whether the LLM correctly classified advice direction---not to measure human bias.
+
+\subsubsection{Agreement Results}
+
+For advice direction---our primary outcome measure---the LLM classifier achieved \textbf{96\% agreement} with human judgment (192 of 200 comments). Disagreements were primarily in edge cases where comments contained elements of both support and criticism.
 
 \subsection{Statistical Methods}
 

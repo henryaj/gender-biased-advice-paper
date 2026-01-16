@@ -64,7 +64,13 @@ Each comment was classified using **Claude Sonnet 4.5** (`claude-sonnet-4-5-2025
 
 ### Human Validation
 
-To validate classification accuracy, we conducted human spot-checking of **200 randomly sampled comments**. For advice direction—our primary outcome measure—the LLM classifier achieved **96% agreement** with human judgment.
+To validate classification accuracy, we conducted human spot-checking using a custom web-based validation interface:
+
+- **Stratified sample**: 200 comments (100 from male-authored posts, 100 from female-authored posts)
+- **Blind protocol**: The reviewer did not see the LLM's classification when making their judgment
+- **Independent rating**: Human and LLM classifications were compared only after submission
+
+For advice direction—our primary outcome measure—the LLM classifier achieved **96% agreement** with human judgment.
 
 ### Statistical Methods
 
@@ -154,9 +160,11 @@ Scrape Metafilter → Classify Posts → Filter Dataset → Classify Comments �
 | `src/scrapers/metafilter_scraper.py` | Data collection |
 | `src/classifiers/post_classifier.py` | Post classification with Claude |
 | `src/classifiers/comment_classifier.py` | Comment classification with Claude |
-| `scripts/classify_with_claude_code.py` | Batch classification via Claude CLI |
+| `scripts/classify_with_claude_code.py` | Batch classification |
 | `scripts/sensitivity_analysis.py` | Statistical analysis |
 | `scripts/generate_charts.py` | Chart generation |
+| `web/app.py` | Flask app for data exploration and validation |
+| `web/templates/validate.html` | Blind validation interface |
 
 ### Database Schema
 

@@ -20,7 +20,15 @@ We collected 591 relationship advice posts from Ask Metafilter's "relationships"
 
 For each post, we identified the poster's gender from their writing (e.g., "My [30M] girlfriend..." or "I [25F] have been with my husband..."). For each comment, we classified the **advice direction**: Is the commenter supportive of the original poster (OP), critical of them, neutral, or mixed?
 
-We used an AI classifier (Claude Sonnet 4.5) for this analysis, then validated it by manually reviewing a random sample of 200 comments. The classifier achieved **96% agreement** with human judgment on advice direction—the key metric for our findings.
+We used an AI classifier (Claude Sonnet 4.5) for this analysis, then validated it against human judgment using a custom validation interface.
+
+### Validation: How We Checked the AI's Work
+
+To ensure the classifier was reliable, we built a web-based tool for human spot-checking. A stratified random sample of 200 comments (100 from male-authored posts, 100 from female-authored posts) was presented to a human reviewer in random order.
+
+The key design choice: **the reviewer never saw the AI's classification**. They read the original post and the comment, then made an independent judgment about advice direction. Only after submitting their rating was it compared to the AI's prediction. This blind protocol ensures the human wasn't anchored by the AI's answer.
+
+The result: **96% agreement** between human and AI classification on advice direction—the key metric for our findings.
 
 ---
 
