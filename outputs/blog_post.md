@@ -1,4 +1,4 @@
-# The Advice Gap: Why Men Get Told and Women Get Supported in Online Relationship Forums
+# The Advice Gap: Why Men Get Criticized and Women Get Supported in Online Relationship Forums
 
 *An analysis of 6,000+ comments reveals a striking pattern in how we give advice based on who's asking.*
 
@@ -10,7 +10,7 @@ Imagine you're going through a rough patch in your relationship. Maybe you're no
 
 But here's something you probably haven't considered: the advice you receive may depend less on what you describe, and more on whether you're a man or a woman.
 
-We analyzed over 6,000 advice comments from Ask Metafilter, a well-moderated online community, and found a consistent pattern: **men receive nearly 3x more critical advice than women**, even when describing similar situations.
+We analyzed over 6,000 advice comments from Ask Metafilter, a well-moderated online community, and found a consistent pattern: **men receive over 4x more critical advice than women**, even when describing similar situations.
 
 ---
 
@@ -18,31 +18,23 @@ We analyzed over 6,000 advice comments from Ask Metafilter, a well-moderated onl
 
 We collected 591 relationship advice posts from Ask Metafilter's "relationships" tag—posts where people describe interpersonal problems and ask for community input. These posts generated 7,091 comments, of which 6,080 contained actual advice (as opposed to jokes, follow-up questions, or personal anecdotes).
 
-For each post, we identified the poster's gender from their writing (e.g., "My [30M] girlfriend..." or "I [25F] have been with my husband..."). For each comment, we classified:
+For each post, we identified the poster's gender from their writing (e.g., "My [30M] girlfriend..." or "I [25F] have been with my husband..."). For each comment, we classified the **advice direction**: Is the commenter supportive of the original poster (OP), critical of them, neutral, or mixed?
 
-1. **Advice direction**: Is the commenter supportive of the original poster (OP), critical of them, neutral, or mixed?
-2. **Tone**: What's the emotional quality of the advice? (e.g., empathetic, encouraging, judgmental, blaming)
-
-We used an AI classifier (Claude Haiku) for this analysis, then validated it by manually reviewing a random sample. The classifier achieved **96% agreement** with human judgment on advice direction—the key metric for our findings.
+We used an AI classifier (Claude Sonnet 4.5) for this analysis, then validated it by manually reviewing a random sample of 200 comments. The classifier achieved **96% agreement** with human judgment on advice direction—the key metric for our findings.
 
 ---
 
 ## The Findings
 
-The headline number: **Men are 2.9 times more likely to receive critical advice than women.**
+The headline number: **Men are 4.2 times more likely to receive critical advice than women.**
 
 | What the advice looks like | Men | Women | Difference |
 |---------------------------|-----|-------|------------|
-| Critical of poster | 37.9% | 17.6% | **+20.3 pp** |
-| Supportive of poster | 25.3% | 45.3% | **-20.0 pp** |
-| Encouraging tone | 23.7% | 34.5% | -10.7 pp |
-| Empathetic tone | 54.8% | 65.5% | -10.7 pp |
-| Judgmental tone | 11.7% | 4.0% | +7.7 pp |
-| Blaming tone | 9.2% | 2.2% | +7.0 pp |
+| Critical of poster | 27.4% | 8.3% | **+19.2 pp** |
 
-Every single difference is statistically significant (p < 0.0001).
+This is statistically overwhelming (p < 0.0001, chi-square = 381.8).
 
-To put this in perspective: if you're a man posting about a relationship problem, you have roughly a 1-in-3 chance of receiving advice that criticizes you. If you're a woman posting about the same kind of problem, it's closer to 1-in-6.
+To put this in perspective: if you're a man posting about a relationship problem, you have roughly a 1-in-4 chance of receiving advice that criticizes you. If you're a woman posting about the same kind of problem, it's closer to 1-in-12.
 
 ---
 
@@ -58,6 +50,24 @@ We tested this. For each post, we also classified:
 The result? **Men and women post about situations with similar severity and fault distributions.** There's no statistical difference in how "bad" the situations are that each gender describes.
 
 And when we control for these factors—comparing men and women who describe equally severe situations where they're equally at fault—the bias persists. Men still receive significantly more critical advice.
+
+---
+
+## The Pattern Holds Across Categories
+
+We broke down the results by problem type:
+
+| Category | Men Critical | Women Critical | Difference |
+|----------|-------------|----------------|------------|
+| Finances | 44.4% | 8.6% | +35.9 pp |
+| Commitment | 33.0% | 5.7% | +27.3 pp |
+| Communication | 29.1% | 7.9% | +21.2 pp |
+| Boundaries | 29.7% | 9.3% | +20.4 pp |
+| Intimacy | 18.5% | 5.6% | +12.9 pp |
+| Lifestyle | 25.7% | 14.3% | +11.4 pp |
+| Infidelity | 14.6% | 16.4% | -1.8 pp |
+
+The gender gap is significant in almost every category. The one exception? **Infidelity**—where men and women receive nearly equal rates of critical advice. Perhaps when cheating is involved, commenters apply similar standards regardless of gender.
 
 ---
 
@@ -81,7 +91,7 @@ We should be clear about what this study can and can't tell us:
 
 - **Single platform**: Ask Metafilter has a particular culture (generally progressive, well-moderated). Results might differ on Reddit, Facebook groups, or other forums.
 
-- **Classification accuracy**: While our classifier achieved 96% agreement on the main metric, AI classification isn't perfect. We validated against human judgment and re-ran analyses with conservative settings to ensure robustness.
+- **Classification accuracy**: While our classifier achieved 96% agreement on the main metric, AI classification isn't perfect. We validated against human judgment to ensure robustness.
 
 - **Correlation, not causation**: We can't say *why* this happens. It could be commenter bias, subtle differences in how men and women describe problems, or community norms. What we can say is that the pattern exists.
 

@@ -4,48 +4,15 @@
     "human_agreement": "96%",
     "male_n": 1716,
     "female_n": 4364,
-    "male_rate": 0.3787878787878788,
-    "female_rate": 0.1759853345554537,
-    "difference": 0.20280254423242508,
-    "odds_ratio": 2.855055894308943,
-    "chi2": 282.13925105983344,
-    "p_value": 2.5669800336174596e-63,
+    "male_rate": 0.3735431235431235,
+    "female_rate": 0.09097158570119157,
+    "difference": 0.28257153784193195,
+    "odds_ratio": 5.958284810497335,
+    "chi2": 692.6494715344772,
+    "p_value": 1.1861424804026099e-152,
     "significant": "True"
   },
   "tone_labels_all": {
-    "judgmental": {
-      "male_count": 200,
-      "female_count": 174,
-      "male_rate": 0.11655011655011654,
-      "female_rate": 0.03987167736021998,
-      "difference": 0.07667843918989656,
-      "chi2": 124.11894794190364,
-      "p_value": 7.934192463115496e-29,
-      "significant": "True",
-      "disputed": true
-    },
-    "understanding": {
-      "male_count": 1113,
-      "female_count": 3180,
-      "male_rate": 0.6486013986013986,
-      "female_rate": 0.7286892758936755,
-      "difference": -0.08008787729227684,
-      "chi2": 37.682510922570685,
-      "p_value": 8.324759052682036e-10,
-      "significant": "True",
-      "disputed": false
-    },
-    "blaming": {
-      "male_count": 158,
-      "female_count": 96,
-      "male_rate": 0.09207459207459208,
-      "female_rate": 0.021998166819431713,
-      "difference": 0.07007642525516036,
-      "chi2": 149.3478467424159,
-      "p_value": 2.407170869772473e-34,
-      "significant": "True",
-      "disputed": true
-    },
     "supportive": {
       "male_count": 434,
       "female_count": 1979,
@@ -56,50 +23,6 @@
       "p_value": 9.450801782273625e-47,
       "significant": "True",
       "disputed": false
-    },
-    "encouraging": {
-      "male_count": 407,
-      "female_count": 1504,
-      "male_rate": 0.23717948717948717,
-      "female_rate": 0.3446379468377635,
-      "difference": -0.10745845965827633,
-      "chi2": 65.49478729774722,
-      "p_value": 5.826788223872687e-16,
-      "significant": "True",
-      "disputed": false
-    },
-    "hostile": {
-      "male_count": 36,
-      "female_count": 15,
-      "male_rate": 0.02097902097902098,
-      "female_rate": 0.0034372135655362053,
-      "difference": 0.017541807413484774,
-      "chi2": 43.481235017427124,
-      "p_value": 4.280444164733257e-11,
-      "significant": "True",
-      "disputed": true
-    },
-    "dismissive": {
-      "male_count": 76,
-      "female_count": 153,
-      "male_rate": 0.04428904428904429,
-      "female_rate": 0.03505957836846929,
-      "difference": 0.009229465920574997,
-      "chi2": 2.6455956169891293,
-      "p_value": 0.10383723276950077,
-      "significant": "False",
-      "disputed": true
-    },
-    "harsh": {
-      "male_count": 105,
-      "female_count": 133,
-      "male_rate": 0.06118881118881119,
-      "female_rate": 0.030476626947754354,
-      "difference": 0.030712184241056838,
-      "chi2": 30.076761550307832,
-      "p_value": 4.152778698659857e-08,
-      "significant": "True",
-      "disputed": true
     },
     "condescending": {
       "male_count": 78,
@@ -123,6 +46,17 @@
       "significant": "False",
       "disputed": false
     },
+    "harsh": {
+      "male_count": 105,
+      "female_count": 133,
+      "male_rate": 0.06118881118881119,
+      "female_rate": 0.030476626947754354,
+      "difference": 0.030712184241056838,
+      "chi2": 30.076761550307832,
+      "p_value": 4.152778698659857e-08,
+      "significant": "True",
+      "disputed": true
+    },
     "empathetic": {
       "male_count": 940,
       "female_count": 2857,
@@ -131,6 +65,28 @@
       "difference": -0.10688906266358145,
       "chi2": 59.555322271743115,
       "p_value": 1.1890413934607181e-14,
+      "significant": "True",
+      "disputed": false
+    },
+    "blaming": {
+      "male_count": 158,
+      "female_count": 96,
+      "male_rate": 0.09207459207459208,
+      "female_rate": 0.021998166819431713,
+      "difference": 0.07007642525516036,
+      "chi2": 149.3478467424159,
+      "p_value": 2.407170869772473e-34,
+      "significant": "True",
+      "disputed": true
+    },
+    "understanding": {
+      "male_count": 1113,
+      "female_count": 3180,
+      "male_rate": 0.6486013986013986,
+      "female_rate": 0.7286892758936755,
+      "difference": -0.08008787729227684,
+      "chi2": 37.682510922570685,
+      "p_value": 8.324759052682036e-10,
       "significant": "True",
       "disputed": false
     },
@@ -144,9 +100,64 @@
       "p_value": 0.15820028130557728,
       "significant": "False",
       "disputed": false
+    },
+    "dismissive": {
+      "male_count": 76,
+      "female_count": 153,
+      "male_rate": 0.04428904428904429,
+      "female_rate": 0.03505957836846929,
+      "difference": 0.009229465920574997,
+      "chi2": 2.6455956169891293,
+      "p_value": 0.10383723276950077,
+      "significant": "False",
+      "disputed": true
+    },
+    "encouraging": {
+      "male_count": 407,
+      "female_count": 1504,
+      "male_rate": 0.23717948717948717,
+      "female_rate": 0.3446379468377635,
+      "difference": -0.10745845965827633,
+      "chi2": 65.49478729774722,
+      "p_value": 5.826788223872687e-16,
+      "significant": "True",
+      "disputed": false
+    },
+    "judgmental": {
+      "male_count": 200,
+      "female_count": 174,
+      "male_rate": 0.11655011655011654,
+      "female_rate": 0.03987167736021998,
+      "difference": 0.07667843918989656,
+      "chi2": 124.11894794190364,
+      "p_value": 7.934192463115496e-29,
+      "significant": "True",
+      "disputed": true
+    },
+    "hostile": {
+      "male_count": 36,
+      "female_count": 15,
+      "male_rate": 0.02097902097902098,
+      "female_rate": 0.0034372135655362053,
+      "difference": 0.017541807413484774,
+      "chi2": 43.481235017427124,
+      "p_value": 4.280444164733257e-11,
+      "significant": "True",
+      "disputed": true
     }
   },
   "tone_labels_clean": {
+    "supportive": {
+      "male_count": 434,
+      "female_count": 1979,
+      "male_rate": 0.2529137529137529,
+      "female_rate": 0.45348304307974335,
+      "difference": -0.20056929016599045,
+      "chi2": 206.16097334520575,
+      "p_value": 9.450801782273625e-47,
+      "significant": "True",
+      "disputed": false
+    },
     "understanding": {
       "male_count": 1113,
       "female_count": 3180,
@@ -169,6 +180,17 @@
       "significant": "False",
       "disputed": false
     },
+    "constructive": {
+      "male_count": 1251,
+      "female_count": 3260,
+      "male_rate": 0.7290209790209791,
+      "female_rate": 0.7470210815765352,
+      "difference": -0.018000102555556174,
+      "chi2": 1.9913453590701806,
+      "p_value": 0.15820028130557728,
+      "significant": "False",
+      "disputed": false
+    },
     "empathetic": {
       "male_count": 940,
       "female_count": 2857,
@@ -177,17 +199,6 @@
       "difference": -0.10688906266358145,
       "chi2": 59.555322271743115,
       "p_value": 1.1890413934607181e-14,
-      "significant": "True",
-      "disputed": false
-    },
-    "supportive": {
-      "male_count": 434,
-      "female_count": 1979,
-      "male_rate": 0.2529137529137529,
-      "female_rate": 0.45348304307974335,
-      "difference": -0.20056929016599045,
-      "chi2": 206.16097334520575,
-      "p_value": 9.450801782273625e-47,
       "significant": "True",
       "disputed": false
     },
@@ -200,17 +211,6 @@
       "chi2": 65.49478729774722,
       "p_value": 5.826788223872687e-16,
       "significant": "True",
-      "disputed": false
-    },
-    "constructive": {
-      "male_count": 1251,
-      "female_count": 3260,
-      "male_rate": 0.7290209790209791,
-      "female_rate": 0.7470210815765352,
-      "difference": -0.018000102555556174,
-      "chi2": 1.9913453590701806,
-      "p_value": 0.15820028130557728,
-      "significant": "False",
       "disputed": false
     }
   },

@@ -363,6 +363,39 @@ class Database:
             rows = conn.execute(query).fetchall()
             return [dict(row) for row in rows]
 
+    def get_classified_comments(
+        self,
+        filter_for_analysis: bool = True,
+        limit: Optional[int] = None
+    ) -> List[Dict]:
+        """Get comments that have already been classified (for re-classification).
+
+        Args:
+            filter_for_analysis: Apply strict filter criteria for analysis
+            limit: Maximum number of comments to return
+        """
+        with self.get_connection() as conn:
+            query = """
+                SELECT c.*, p.title as post_title, p.body as post_body,
+                       pc.brief_situation_summary, pc.poster_gender,
+                       cc.advice_direction as old_advice_direction
+                FROM comments c
+                JOIN posts p ON c.post_id = p.post_id
+                JOIN post_classifications pc ON p.post_id = pc.post_id
+                JOIN comment_classifications cc ON c.comment_id = cc.comment_id
+                WHERE pc.is_relationship_advice = 1
+            """
+            if filter_for_analysis:
+                query += """
+                AND pc.problem_category IS NOT NULL
+                AND pc.poster_gender IN ('male', 'female')
+                AND pc.gender_confidence > 0.7
+                """
+            if limit:
+                query += f" LIMIT {limit}"
+            rows = conn.execute(query).fetchall()
+            return [dict(row) for row in rows]
+
     def count_comments(self, post_id: Optional[str] = None) -> int:
         """Count comments, optionally for a specific post."""
         with self.get_connection() as conn:

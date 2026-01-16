@@ -1,13 +1,61 @@
 """Simple Flask app for exploring the research dataset."""
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 from collections import defaultdict
 from flask import Flask, render_template, request, g, send_file, redirect
+from markupsafe import Markup
 
 app = Flask(__name__)
 DATABASE = '../data/research.db'
+
+# Validation targets - stratified by tone to ensure good coverage
+# Focus on harsh tones since those are the key findings
+VALIDATION_TARGETS = {
+    'dismissive': 25,    # Currently 31% agreement - needs most attention
+    'harsh': 20,         # 57% agreement - ambiguous category
+    'judgmental': 20,    # 55% agreement - ambiguous category
+    'blaming': 15,       # 57% agreement - decent sample already
+    'condescending': 10, # 80% agreement - mostly working
+    'hostile': 10,       # Only 1 sample so far
+}
+TOTAL_VALIDATION_TARGET = sum(VALIDATION_TARGETS.values())  # 100 total
+
+
+def format_comment_with_quotes(body):
+    """Format comment body, styling quoted text (lines starting with >)."""
+    if not body:
+        return ''
+
+    lines = body.split('\n')
+    result = []
+    in_quote = False
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('>'):
+            # This is a quoted line
+            quote_text = stripped[1:].strip()
+            if not in_quote:
+                result.append('<div class="quoted-text">')
+                in_quote = True
+            result.append(f'<p>{quote_text}</p>')
+        else:
+            if in_quote:
+                result.append('</div>')
+                in_quote = False
+            if stripped:
+                result.append(f'<p>{stripped}</p>')
+            elif result and not result[-1].endswith('</div>'):
+                # Preserve paragraph breaks
+                result.append('<br>')
+
+    if in_quote:
+        result.append('</div>')
+
+    return Markup(''.join(result))
 
 
 def get_db():
@@ -359,56 +407,103 @@ def download_report():
     return "Report not generated yet. Run: python main.py --generate-report", 404
 
 
+def get_or_create_validation_sample(db, target_per_gender=100):
+    """Get or create a stratified random sample for validation."""
+    # Check if we have a sample table
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS validation_sample (
+            comment_id TEXT PRIMARY KEY,
+            sample_order INTEGER
+        )
+    ''')
+
+    # Check if sample exists and has enough
+    existing = db.execute('SELECT COUNT(*) FROM validation_sample').fetchone()[0]
+
+    if existing < target_per_gender * 2:
+        # Create new stratified sample
+        db.execute('DELETE FROM validation_sample')
+
+        # Get random sample from each gender (excluding OP responses)
+        male_sample = db.execute('''
+            SELECT c.comment_id
+            FROM comment_classifications cc
+            JOIN comments c ON cc.comment_id = c.comment_id
+            JOIN post_classifications pc ON c.post_id = pc.post_id
+            WHERE cc.is_advice = 1
+              AND pc.gender_confidence > 0.7
+              AND pc.poster_gender = 'male'
+              AND c.body NOT LIKE '%Response by poster:%'
+            ORDER BY RANDOM()
+            LIMIT ?
+        ''', [target_per_gender]).fetchall()
+
+        female_sample = db.execute('''
+            SELECT c.comment_id
+            FROM comment_classifications cc
+            JOIN comments c ON cc.comment_id = c.comment_id
+            JOIN post_classifications pc ON c.post_id = pc.post_id
+            WHERE cc.is_advice = 1
+              AND pc.gender_confidence > 0.7
+              AND pc.poster_gender = 'female'
+              AND c.body NOT LIKE '%Response by poster:%'
+            ORDER BY RANDOM()
+            LIMIT ?
+        ''', [target_per_gender]).fetchall()
+
+        # Interleave and shuffle
+        import random
+        all_ids = [r[0] for r in male_sample] + [r[0] for r in female_sample]
+        random.shuffle(all_ids)
+
+        # Insert with order
+        for i, cid in enumerate(all_ids):
+            db.execute('INSERT INTO validation_sample (comment_id, sample_order) VALUES (?, ?)', [cid, i])
+
+        db.commit()
+
+    return existing
+
+
 @app.route('/validate', methods=['GET', 'POST'])
 def validate():
     """Spot-check validation interface for LLM classifications."""
     db = get_db()
 
-    # Handle POST (save validation)
+    # Ensure we have a stratified sample
+    get_or_create_validation_sample(db, target_per_gender=100)
+
+    # Handle POST (save blind validation - direction only)
     if request.method == 'POST':
         comment_id = request.form.get('comment_id')
 
-        # Save advice_direction validation
-        direction_judgment = request.form.get('direction_judgment')
-        if direction_judgment:
-            direction_value = request.form.get('direction_value')
-            direction_correction = request.form.get('direction_correction') if direction_judgment == 'incorrect' else None
+        # Get human's blind rating
+        human_direction = request.form.get('human_direction')
+        llm_direction = request.form.get('llm_direction')
+
+        # Save direction comparison (blind validation)
+        if human_direction:
+            direction_match = 'correct' if human_direction == llm_direction else 'incorrect'
             db.execute('''
                 INSERT INTO classification_validations
                 (comment_id, field_name, llm_value, human_judgment, human_correction)
-                VALUES (?, 'advice_direction', ?, ?, ?)
-            ''', [comment_id, direction_value, direction_judgment, direction_correction])
-
-        # Save tone label validations
-        tone_labels = request.form.getlist('tone_labels')
-        for tone in tone_labels:
-            tone_judgment = request.form.get(f'tone_{tone}')
-            if tone_judgment:
-                db.execute('''
-                    INSERT INTO classification_validations
-                    (comment_id, field_name, llm_value, human_judgment)
-                    VALUES (?, 'tone_labels', ?, ?)
-                ''', [comment_id, tone, tone_judgment])
+                VALUES (?, 'advice_direction_blind', ?, ?, ?)
+            ''', [comment_id, llm_direction, direction_match, human_direction])
 
         db.commit()
 
-        # Redirect to next comment (with same filters)
-        gender = request.form.get('filter_gender', '')
-        direction = request.form.get('filter_direction', '')
-        return redirect(f'/validate?gender={gender}&direction={direction}')
+        # Redirect to next
+        return redirect('/validate')
 
     # GET: Show validation form
-    gender_filter = request.args.get('gender', '')
-    direction_filter = request.args.get('direction', '')
-    tone_filter = request.args.get('tone', '')  # Filter for specific tone labels
     comment_id = request.args.get('comment_id', '')
 
-    # Get comment to validate
+    # Get comment to validate - from stratified sample, in order
     if comment_id:
         # Specific comment requested
         comment = db.execute('''
             SELECT c.comment_id, c.body as comment_body, c.author, c.score,
-                   p.post_id, p.title as post_title,
+                   p.post_id, p.title as post_title, p.body as post_body,
                    pc.poster_gender, pc.gender_confidence, pc.brief_situation_summary,
                    pc.situation_severity, pc.op_fault, pc.problem_category,
                    cc.advice_direction, cc.tone_labels
@@ -419,38 +514,25 @@ def validate():
             WHERE c.comment_id = ?
         ''', [comment_id]).fetchone()
     else:
-        # Random unvalidated comment
-        query = '''
+        # Next unvalidated comment from stratified sample
+        comment = db.execute('''
             SELECT c.comment_id, c.body as comment_body, c.author, c.score,
-                   p.post_id, p.title as post_title,
+                   p.post_id, p.title as post_title, p.body as post_body,
                    pc.poster_gender, pc.gender_confidence, pc.brief_situation_summary,
                    pc.situation_severity, pc.op_fault, pc.problem_category,
                    cc.advice_direction, cc.tone_labels
-            FROM comments c
+            FROM validation_sample vs
+            JOIN comments c ON vs.comment_id = c.comment_id
             JOIN posts p ON c.post_id = p.post_id
             JOIN post_classifications pc ON p.post_id = pc.post_id
             JOIN comment_classifications cc ON c.comment_id = cc.comment_id
-            WHERE cc.is_advice = 1
-            AND c.comment_id NOT IN (
-                SELECT DISTINCT comment_id FROM classification_validations
-                WHERE field_name = 'advice_direction'
+            WHERE vs.comment_id NOT IN (
+                SELECT comment_id FROM classification_validations
+                WHERE field_name = 'advice_direction_blind'
             )
-        '''
-        params = []
-
-        if gender_filter:
-            query += ' AND pc.poster_gender = ?'
-            params.append(gender_filter)
-        if direction_filter:
-            query += ' AND cc.advice_direction = ?'
-            params.append(direction_filter)
-        if tone_filter:
-            # Filter for comments containing specific tone label
-            query += ' AND cc.tone_labels LIKE ?'
-            params.append(f'%"{tone_filter}"%')
-
-        query += ' ORDER BY RANDOM() LIMIT 1'
-        comment = db.execute(query, params).fetchone()
+            ORDER BY vs.sample_order
+            LIMIT 1
+        ''').fetchone()
 
     # Parse tone labels if present
     if comment and comment['tone_labels']:
@@ -461,46 +543,32 @@ def validate():
     else:
         tone_labels = []
 
-    # Get validation stats
-    stats = {}
-    stats['total_validated'] = db.execute(
-        "SELECT COUNT(DISTINCT comment_id) FROM classification_validations WHERE field_name = 'advice_direction'"
-    ).fetchone()[0]
-    stats['total_classified'] = db.execute(
-        'SELECT COUNT(*) FROM comment_classifications WHERE is_advice = 1'
-    ).fetchone()[0]
+    # Get validation stats for direction (blind)
+    validated_count = db.execute('''
+        SELECT COUNT(*) FROM classification_validations
+        WHERE field_name = 'advice_direction_blind'
+    ''').fetchone()[0]
 
-    # Agreement rate
-    agreement = db.execute('''
-        SELECT
-            SUM(CASE WHEN human_judgment = 'correct' THEN 1 ELSE 0 END) as correct,
-            COUNT(*) as total
-        FROM classification_validations
-        WHERE field_name = 'advice_direction'
-    ''').fetchone()
-    if agreement['total'] > 0:
-        stats['agreement_rate'] = agreement['correct'] / agreement['total']
-    else:
-        stats['agreement_rate'] = None
+    sample_size = db.execute('SELECT COUNT(*) FROM validation_sample').fetchone()[0]
 
-    # Filter options
-    genders = db.execute('''
-        SELECT DISTINCT poster_gender FROM post_classifications
-        WHERE is_relationship_advice = 1 AND poster_gender IN ('male', 'female')
-    ''').fetchall()
-    directions = ['supportive_of_op', 'critical_of_op', 'neutral', 'mixed']
-    harsh_tones = ['harsh', 'judgmental', 'blaming', 'condescending', 'dismissive', 'hostile']
+    stats = {
+        'validated': validated_count,
+        'total': sample_size,
+        'remaining': sample_size - validated_count
+    }
+
+    # Format comment and post body with quote styling
+    comment_body_formatted = None
+    post_body_formatted = None
+    if comment:
+        comment_body_formatted = format_comment_with_quotes(comment['comment_body'])
+        post_body_formatted = format_comment_with_quotes(comment['post_body'])
 
     return render_template('validate.html',
                           comment=comment,
-                          tone_labels=tone_labels,
-                          stats=stats,
-                          genders=genders,
-                          directions=directions,
-                          harsh_tones=harsh_tones,
-                          current_gender=gender_filter,
-                          current_direction=direction_filter,
-                          current_tone=tone_filter)
+                          comment_body_formatted=comment_body_formatted,
+                          post_body_formatted=post_body_formatted,
+                          stats=stats)
 
 
 if __name__ == '__main__':
