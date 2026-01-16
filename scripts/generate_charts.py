@@ -19,6 +19,13 @@ MALE_COLOR = '#4A90D9'
 FEMALE_COLOR = '#E85D75'
 
 
+def ci_95(p, n):
+    """Calculate 95% confidence interval half-width for a proportion."""
+    if n == 0:
+        return 0
+    return 1.96 * np.sqrt(p * (1 - p) / n) * 100  # Return as percentage points
+
+
 def get_data():
     """Get analysis data from database."""
     conn = sqlite3.connect(DB_PATH)
@@ -45,7 +52,7 @@ def get_data():
 
 
 def chart_critical_by_gender(data):
-    """Bar chart: Critical advice rate by gender."""
+    """Bar chart: Critical advice rate by gender with 95% CI error bars."""
     male_total = sum(1 for d in data if d['poster_gender'] == 'male')
     female_total = sum(1 for d in data if d['poster_gender'] == 'female')
     male_critical = sum(1 for d in data if d['poster_gender'] == 'male' and d['advice_direction'] == 'critical_of_op')
@@ -54,22 +61,29 @@ def chart_critical_by_gender(data):
     male_rate = male_critical / male_total * 100
     female_rate = female_critical / female_total * 100
 
+    # Calculate 95% CIs
+    male_ci = ci_95(male_critical / male_total, male_total)
+    female_ci = ci_95(female_critical / female_total, female_total)
+
     fig, ax = plt.subplots(figsize=(6, 4))
 
     bars = ax.bar(['Men', 'Women'], [male_rate, female_rate],
-                  color=[MALE_COLOR, FEMALE_COLOR], width=0.6)
+                  yerr=[male_ci, female_ci], capsize=5,
+                  color=[MALE_COLOR, FEMALE_COLOR], width=0.6,
+                  error_kw={'elinewidth': 2, 'capthick': 2})
 
-    # Add value labels
-    for bar, rate in zip(bars, [male_rate, female_rate]):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-                f'{rate:.1f}%', ha='center', va='bottom', fontweight='bold')
+    # Add value labels with CI
+    ax.text(0, male_rate + male_ci + 1.5,
+            f'{male_rate:.1f}%\n(n={male_total:,})', ha='center', va='bottom', fontweight='bold', fontsize=10)
+    ax.text(1, female_rate + female_ci + 1.5,
+            f'{female_rate:.1f}%\n(n={female_total:,})', ha='center', va='bottom', fontweight='bold', fontsize=10)
 
     ax.set_ylabel('Critical Advice Rate (%)')
     ax.set_title('Men Receive 4x More Critical Advice', fontweight='bold', pad=15)
-    ax.set_ylim(0, 35)
+    ax.set_ylim(0, 38)
 
     # Add odds ratio annotation
-    ax.annotate('OR = 4.19x\np < 0.0001',
+    ax.annotate('OR = 4.19x\np < 0.0001\n(95% CI shown)',
                 xy=(0.95, 0.95), xycoords='axes fraction',
                 ha='right', va='top', fontsize=10,
                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
@@ -82,7 +96,7 @@ def chart_critical_by_gender(data):
 
 
 def chart_by_category(data):
-    """Horizontal bar chart: Critical rate by problem category."""
+    """Horizontal bar chart: Critical rate by problem category with 95% CI."""
     categories = {}
 
     for row in data:
@@ -103,33 +117,40 @@ def chart_by_category(data):
     valid_cats = {k: v for k, v in categories.items()
                   if v['male_total'] >= 20 and v['female_total'] >= 20}
 
-    # Calculate rates and sort by difference
+    # Calculate rates, CIs, and sort by difference
     cat_data = []
     for cat, counts in valid_cats.items():
         male_rate = counts['male_critical'] / counts['male_total'] * 100
         female_rate = counts['female_critical'] / counts['female_total'] * 100
-        cat_data.append((cat.capitalize(), male_rate, female_rate, male_rate - female_rate))
+        male_ci = ci_95(counts['male_critical'] / counts['male_total'], counts['male_total'])
+        female_ci = ci_95(counts['female_critical'] / counts['female_total'], counts['female_total'])
+        cat_data.append((cat.capitalize(), male_rate, female_rate, male_rate - female_rate,
+                         male_ci, female_ci, counts['male_total'], counts['female_total']))
 
     cat_data.sort(key=lambda x: x[3], reverse=True)
 
     labels = [d[0] for d in cat_data]
     male_rates = [d[1] for d in cat_data]
     female_rates = [d[2] for d in cat_data]
+    male_cis = [d[4] for d in cat_data]
+    female_cis = [d[5] for d in cat_data]
 
     fig, ax = plt.subplots(figsize=(8, 5))
 
     y = np.arange(len(labels))
     height = 0.35
 
-    bars1 = ax.barh(y - height/2, male_rates, height, label='Men', color=MALE_COLOR)
-    bars2 = ax.barh(y + height/2, female_rates, height, label='Women', color=FEMALE_COLOR)
+    bars1 = ax.barh(y - height/2, male_rates, height, xerr=male_cis, capsize=3,
+                    label='Men', color=MALE_COLOR, error_kw={'elinewidth': 1.5})
+    bars2 = ax.barh(y + height/2, female_rates, height, xerr=female_cis, capsize=3,
+                    label='Women', color=FEMALE_COLOR, error_kw={'elinewidth': 1.5})
 
     ax.set_xlabel('Critical Advice Rate (%)')
     ax.set_title('Gender Gap Across Problem Categories', fontweight='bold', pad=15)
     ax.set_yticks(y)
     ax.set_yticklabels(labels)
     ax.legend(loc='lower right')
-    ax.set_xlim(0, 55)
+    ax.set_xlim(0, 60)
 
     plt.tight_layout()
     plt.savefig(OUTPUT_DIR / 'chart_by_category.png', dpi=150, bbox_inches='tight')
