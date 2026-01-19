@@ -1,0 +1,431 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+% Computer Modern (default LaTeX font) - no package needed
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{natbib}
+\usepackage[margin=1in]{geometry}
+\usepackage{caption}
+\usepackage{xcolor}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Placeholder command
+\newcommand{\placeholder}[1]{\textcolor{gray}{\textit{[#1]}}}
+
+\title{The Advice Gap: Gender Disparities in Online Relationship Advice Communities}
+
+\author{
+    Henry Stanley\\
+    \texttt{henry@henrystanley.com}
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\placeholder{~150-250 words. Key points to cover:}
+\begin{itemize}
+    \item Research question: Do men and women receive different advice in online communities?
+    \item Method: 6,080 advice comments from 591 Ask Metafilter posts, LLM classification
+    \item Main finding: Men receive 2.86x more critical advice (37.9\% vs 17.6\%, $\chi^2 = 282.14$, $p < 0.0001$)
+    \item Robustness: Effect persists after controlling for severity, fault, problem type
+    \item Validation: 96\% agreement with human judgment on advice direction
+    \item Implications: Help-seeking behavior, platform design
+\end{itemize}
+\end{abstract}
+
+\section{Introduction}
+
+\placeholder{~500 words. Key points to cover:}
+\begin{itemize}
+    \item Online advice communities are widely used for personal problems
+    \item Prior work on gender bias in online spaces (Wikipedia, Stack Overflow, harassment)
+    \item Gap: Little research on whether \emph{advice content} differs by recipient gender
+    \item This study: Examine advice direction (supportive vs critical) and tone by poster gender
+    \item Research questions:
+    \begin{enumerate}
+        \item Do men/women receive different proportions of critical vs supportive advice?
+        \item Do tone labels differ by gender?
+        \item Do differences persist after controlling for confounds?
+    \end{enumerate}
+\end{itemize}
+
+\section{Related Work}
+
+\subsection{Gender Bias in Online Communities}
+
+\placeholder{~200 words. Key citations:}
+\begin{itemize}
+    \item Wikipedia gender gap \citep{lam2011wp, hill2013wikipedia}
+    \item Stack Overflow participation \citep{ford2016paradise}
+    \item Online harassment \citep{duggan2017, pew2017}
+    \item Feedback differences in professional contexts \citep{correll2016research}
+\end{itemize}
+
+\subsection{Advice-Giving Dynamics}
+
+\placeholder{~200 words. Key citations:}
+\begin{itemize}
+    \item Supportive vs challenging advice \citep{goldsmith2004communicating}
+    \item Men and help-seeking, "tough love" norms \citep{addis2003men}
+\end{itemize}
+
+\subsection{LLM-Based Content Analysis}
+
+\placeholder{~200 words. Key citations:}
+\begin{itemize}
+    \item LLMs for content analysis at scale \citep{ziems2024can}
+    \item Validation requirements \citep{gilardi2023chatgpt}
+    \item Performance on classification tasks \citep{tornberg2023chatgpt}
+\end{itemize}
+
+\section{Data and Methods}
+
+\subsection{Data Collection}
+
+\placeholder{~200 words. Key facts:}
+\begin{itemize}
+    \item Source: Ask Metafilter, "relationships" tag
+    \item Known for active moderation, thoughtful responses
+    \item Dataset: 591 posts, 7,091 comments (6,080 with advice)
+    \item Gender distribution: 1,716 comments on male posts, 4,364 on female posts
+    \item Imbalance reflects community composition
+\end{itemize}
+
+\subsection{Classification Framework}
+
+\placeholder{~300 words. Describe classification scheme:}
+
+\textbf{Post-level variables:}
+\begin{itemize}
+    \item Poster gender (from explicit mentions, e.g., "I [30M]...")
+    \item Situation severity: low / medium / high
+    \item OP fault: none / some / substantial / unclear
+    \item Problem category (communication, trust, boundaries, etc.)
+\end{itemize}
+
+\textbf{Comment-level variables:}
+\begin{itemize}
+    \item Is advice: boolean
+    \item Advice direction: supportive / critical / neutral / mixed
+    \item Tone labels (12 total):
+    \begin{itemize}
+        \item Positive: gentle, empathetic, constructive, understanding, encouraging, supportive
+        \item Negative: harsh, judgmental, blaming, dismissive, condescending, hostile
+    \end{itemize}
+\end{itemize}
+
+\subsection{LLM Classification}
+
+\placeholder{~200 words. Key points:}
+\begin{itemize}
+    \item Model: Claude Haiku 4.5
+    \item Iteratively refined prompts
+    \item Conservative criteria for negative tones (require clear evidence)
+    \item Example: "judgmental" = explicitly condemning OP as bad person, not just pointing out mistakes
+\end{itemize}
+
+\subsection{Validation}
+
+\placeholder{~150 words. Key points:}
+\begin{itemize}
+    \item Human spot-checking of 51 random comments
+    \item Advice direction: 96\% agreement
+    \item Tone labels: ~57\% agreement (more subjective)
+    \item Re-classified with conservative criteria
+    \item Primary analyses focus on high-reliability advice direction
+\end{itemize}
+
+\subsection{Statistical Methods}
+
+\placeholder{~100 words. Methods used:}
+\begin{itemize}
+    \item Proportions by gender
+    \item Odds ratios with 95\% CI
+    \item Chi-square tests for independence
+    \item Stratified analysis by severity, fault, category
+    \item Two-tailed tests, $\alpha = 0.05$
+\end{itemize}
+
+\section{Results}
+
+\subsection{Dataset Characteristics}
+
+\placeholder{~100 words. Interpret the table below.}
+
+\begin{table}[h]
+\centering
+\caption{Post Characteristics by Poster Gender}
+\label{tab:characteristics}
+\begin{tabular}{lcccc}
+\toprule
+Variable & Male (n=199) & Female (n=392) & $\chi^2$ & $p$ \\
+\midrule
+\textbf{Severity} & & & 2.31 & 0.315 \\
+\quad Low & 18.1\% & 21.4\% & & \\
+\quad Medium & 52.3\% & 48.7\% & & \\
+\quad High & 29.6\% & 29.9\% & & \\
+\midrule
+\textbf{OP Fault} & & & 3.87 & 0.276 \\
+\quad None & 31.2\% & 35.7\% & & \\
+\quad Some & 42.7\% & 38.5\% & & \\
+\quad Substantial & 15.6\% & 17.1\% & & \\
+\quad Unclear & 10.5\% & 8.7\% & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\placeholder{Key point: Severity and fault distributions do NOT differ by gender — men and women post about comparable situations.}
+
+\subsection{Primary Finding: Advice Direction}
+
+\placeholder{~150 words. Interpret the table below.}
+
+\begin{table}[h]
+\centering
+\caption{Advice Direction by Poster Gender}
+\label{tab:direction}
+\begin{tabular}{lccc}
+\toprule
+Advice Direction & Male & Female & Difference \\
+\midrule
+Critical of OP & 37.9\% & 17.6\% & +20.3 pp \\
+Supportive of OP & 25.3\% & 45.3\% & $-$20.0 pp \\
+Neutral & 24.1\% & 26.8\% & $-$2.7 pp \\
+Mixed & 12.7\% & 10.3\% & +2.4 pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\placeholder{Key statistics:}
+\begin{itemize}
+    \item $\chi^2 = 282.14$, $p < 0.0001$
+    \item Odds ratio for critical advice: \textbf{2.86} (95\% CI: 2.50--3.27)
+    \item Odds ratio for supportive advice: 0.41 (95\% CI: 0.36--0.47)
+\end{itemize}
+
+\subsection{Tone Analysis}
+
+\placeholder{~200 words. Interpret the table below.}
+
+\begin{table}[h]
+\centering
+\caption{Tone Labels by Poster Gender}
+\label{tab:tones}
+\begin{tabular}{lccccc}
+\toprule
+Tone & Male & Female & Diff & $\chi^2$ & $p$ \\
+\midrule
+\multicolumn{6}{l}{\textbf{Positive tones}} \\
+Understanding & 64.9\% & 72.9\% & $-$8.0 pp & 38.7 & $<$0.0001 \\
+Empathetic & 54.8\% & 65.5\% & $-$10.7 pp & 60.2 & $<$0.0001 \\
+Constructive & 47.3\% & 49.1\% & $-$1.8 pp & 1.7 & 0.19 \\
+Supportive & 25.3\% & 45.3\% & $-$20.0 pp & 218.4 & $<$0.0001 \\
+Encouraging & 23.7\% & 34.5\% & $-$10.7 pp & 70.1 & $<$0.0001 \\
+Gentle & 12.4\% & 18.2\% & $-$5.8 pp & 32.1 & $<$0.0001 \\
+\midrule
+\multicolumn{6}{l}{\textbf{Negative tones}} \\
+Judgmental & 11.7\% & 4.0\% & +7.7 pp & 125.8 & $<$0.0001 \\
+Blaming & 9.2\% & 2.2\% & +7.0 pp & 145.3 & $<$0.0001 \\
+Harsh & 6.1\% & 3.0\% & +3.1 pp & 30.8 & $<$0.0001 \\
+Condescending & 4.5\% & 1.9\% & +2.7 pp & 31.6 & $<$0.0001 \\
+Hostile & 2.1\% & 0.3\% & +1.8 pp & 42.9 & $<$0.0001 \\
+Dismissive & 3.8\% & 3.2\% & +0.6 pp & 1.3 & 0.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\placeholder{Key points: Men receive more negative tones (judgmental, blaming, harsh, condescending, hostile). Women receive more positive tones (understanding, empathetic, supportive, encouraging, gentle). Constructive and dismissive show no significant difference.}
+
+\subsection{Confound Analysis}
+
+\placeholder{~200 words. Interpret the stratified tables below.}
+
+\begin{table}[h]
+\centering
+\caption{Advice Direction by Gender, Stratified by Situation Severity}
+\label{tab:severity}
+\begin{tabular}{llccc}
+\toprule
+Severity & Gender & \% Critical & OR & $p$ \\
+\midrule
+Low & Male & 29.8\% & 2.41 & $<$0.001 \\
+ & Female & 15.0\% & & \\
+Medium & Male & 38.4\% & 2.92 & $<$0.0001 \\
+ & Female & 17.1\% & & \\
+High & Male & 43.2\% & 2.78 & $<$0.0001 \\
+ & Female & 21.3\% & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Advice Direction by Gender, Stratified by OP Fault}
+\label{tab:fault}
+\begin{tabular}{llccc}
+\toprule
+OP Fault & Gender & \% Critical & OR & $p$ \\
+\midrule
+None & Male & 28.1\% & 2.53 & $<$0.001 \\
+ & Female & 13.1\% & & \\
+Some & Male & 41.2\% & 2.71 & $<$0.0001 \\
+ & Female & 20.4\% & & \\
+Substantial & Male & 52.7\% & 2.34 & $<$0.001 \\
+ & Female & 31.8\% & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\placeholder{Key points:}
+\begin{itemize}
+    \item Effect persists across ALL severity levels (OR 2.4--2.9)
+    \item Effect persists across ALL fault levels (OR 2.3--2.7)
+    \item Notable: Men with NO fault (28.1\%) receive more critical advice than women with SOME fault (20.4\%)
+\end{itemize}
+
+\subsection{Sensitivity Analysis}
+
+\placeholder{~100 words. Key points:}
+\begin{itemize}
+    \item Core finding uses advice direction (96\% human agreement) — robust
+    \item Excluding negative tone labels: positive tone differences remain significant
+    \item Finding does not depend on subjective tone classifications
+\end{itemize}
+
+\section{Discussion}
+
+\subsection{Summary of Findings}
+
+\placeholder{~100 words. Summarize: Men 2.86x more critical advice, persists after controls, women get more supportive/empathetic responses.}
+
+\subsection{Interpretation}
+
+\placeholder{~200 words. Possible mechanisms:}
+\begin{itemize}
+    \item Commenter stereotypes ("tough love" for men)
+    \item Differential accountability standards
+    \item Writing style differences (but confound analysis suggests this doesn't fully explain)
+    \item Community composition (Ask Metafilter skews female — in-group favoritism?)
+\end{itemize}
+
+\subsection{Implications}
+
+\placeholder{~200 words. Discuss implications for:}
+\begin{itemize}
+    \item Help-seekers (men should contextualize critical feedback)
+    \item Communities/platforms (consider bias in advice-giving norms)
+    \item Research (LLM methodology for large-scale advice analysis)
+\end{itemize}
+
+\subsection{Comparison to Related Work}
+
+\placeholder{~100 words. Compare to:}
+\begin{itemize}
+    \item Prior work on men receiving less emotional support \citep{addis2003men}
+    \item Effect size (OR $\approx$ 3) larger than some professional setting biases
+    \item Possible explanation: anonymous online contexts reduce social desirability
+\end{itemize}
+
+\section{Limitations}
+
+\placeholder{~300 words. Address:}
+\begin{itemize}
+    \item Single platform (Ask Metafilter has specific norms/demographics)
+    \item LLM classification (validated but imperfect)
+    \item Selection effects (can't observe who doesn't post)
+    \item Correlation not causation (can't identify mechanism)
+    \item Binary gender only (excludes non-binary, undisclosed)
+    \item Temporal scope (community norms may change)
+\end{itemize}
+
+\section{Conclusion}
+
+\placeholder{~200 words. Key points:}
+\begin{itemize}
+    \item Evidence of substantial gender disparities in online relationship advice
+    \item Men receive critical advice at ~3x the rate of women
+    \item Pattern persists across situation types and after controlling for severity/fault
+    \item Implications for help-seeking behavior and platform design
+    \item Future directions: cross-platform replication, mechanism investigation, interventions
+\end{itemize}
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{99}
+
+\bibitem[Addis and Mahalik(2003)]{addis2003men}
+Addis, M.~E. and Mahalik, J.~R. (2003).
+\newblock Men, masculinity, and the contexts of help seeking.
+\newblock \emph{American Psychologist}, 58(1):5--14.
+
+\bibitem[Anthropic(2024)]{anthropic2024}
+Anthropic (2024).
+\newblock Claude 3.5 Haiku model card.
+
+\bibitem[Correll and Simard(2016)]{correll2016research}
+Correll, S.~J. and Simard, C. (2016).
+\newblock Research: Vague feedback is holding women back.
+\newblock \emph{Harvard Business Review}.
+
+\bibitem[Duggan(2017)]{duggan2017}
+Duggan, M. (2017).
+\newblock Online harassment 2017.
+\newblock Pew Research Center.
+
+\bibitem[Ford et~al.(2016)]{ford2016paradise}
+Ford, D., Smith, J., Guo, P.~J., and Parnin, C. (2016).
+\newblock Paradise unplugged: Identifying barriers for female participation on Stack Overflow.
+\newblock In \emph{Proceedings of the 24th ACM SIGSOFT International Symposium on Foundations of Software Engineering}, pages 846--857.
+
+\bibitem[Gilardi et~al.(2023)]{gilardi2023chatgpt}
+Gilardi, F., Alizadeh, M., and Kubli, M. (2023).
+\newblock ChatGPT outperforms crowd-workers for text-annotation tasks.
+\newblock \emph{arXiv preprint arXiv:2303.15056}.
+
+\bibitem[Goldsmith(2004)]{goldsmith2004communicating}
+Goldsmith, D.~J. (2004).
+\newblock \emph{Communicating Social Support}.
+\newblock Cambridge University Press.
+
+\bibitem[Hill and Shaw(2013)]{hill2013wikipedia}
+Hill, B.~M. and Shaw, A. (2013).
+\newblock The Wikipedia gender gap revisited: Characterizing survey response bias with propensity score estimation.
+\newblock \emph{PloS One}, 8(6):e65782.
+
+\bibitem[Lam et~al.(2011)]{lam2011wp}
+Lam, S. T.~K., Uduwage, A., Dong, Z., Sen, S., Musicant, D.~R., Terveen, L., and Riedl, J. (2011).
+\newblock WP:Clubhouse? An exploration of Wikipedia's gender imbalance.
+\newblock In \emph{Proceedings of the 7th International Symposium on Wikis and Open Collaboration}, pages 1--10.
+
+\bibitem[Pew Research Center(2017)]{pew2017}
+Pew Research Center (2017).
+\newblock Online harassment 2017.
+
+\bibitem[T{\"o}rnberg(2023)]{tornberg2023chatgpt}
+T{\"o}rnberg, P. (2023).
+\newblock ChatGPT-4 outperforms experts and crowd workers in annotating political Twitter messages with zero-shot learning.
+\newblock \emph{arXiv preprint arXiv:2304.06588}.
+
+\bibitem[Ziems et~al.(2024)]{ziems2024can}
+Ziems, C., Held, W., Shaber, O., Lu, J., Levy, M., Lahav, G., et~al. (2024).
+\newblock Can large language models transform computational social science?
+\newblock \emph{Computational Linguistics}, 50(1):237--291.
+
+\end{thebibliography}
+
+\end{document}

@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, g, send_file, redirect
 from markupsafe import Markup
 
 app = Flask(__name__)
-DATABASE = '../data/research.db'
+DATABASE = Path(__file__).parent.parent / 'data' / 'research.db'
 
 # Validation targets - stratified by tone to ensure good coverage
 # Focus on harsh tones since those are the key findings
@@ -407,8 +407,13 @@ def download_report():
     return "Report not generated yet. Run: python main.py --generate-report", 404
 
 
-def get_or_create_validation_sample(db, target_per_gender=100):
-    """Get or create a stratified random sample for validation."""
+def get_or_create_validation_sample(db, target_per_gender=100, source_filter=None, force_regenerate=False):
+    """Get or create a stratified random sample for validation.
+
+    Args:
+        source_filter: 'reddit' or 'mf' to filter by source, None for all
+        force_regenerate: If True, regenerate sample even if one exists
+    """
     # Check if we have a sample table
     db.execute('''
         CREATE TABLE IF NOT EXISTS validation_sample (
@@ -420,12 +425,19 @@ def get_or_create_validation_sample(db, target_per_gender=100):
     # Check if sample exists and has enough
     existing = db.execute('SELECT COUNT(*) FROM validation_sample').fetchone()[0]
 
-    if existing < target_per_gender * 2:
+    if existing < target_per_gender * 2 or force_regenerate:
         # Create new stratified sample
         db.execute('DELETE FROM validation_sample')
 
+        # Build source filter clause
+        source_clause = ""
+        if source_filter == 'reddit':
+            source_clause = "AND c.post_id LIKE 'reddit_%'"
+        elif source_filter == 'mf':
+            source_clause = "AND c.post_id LIKE 'mf_%'"
+
         # Get random sample from each gender (excluding OP responses)
-        male_sample = db.execute('''
+        male_sample = db.execute(f'''
             SELECT c.comment_id
             FROM comment_classifications cc
             JOIN comments c ON cc.comment_id = c.comment_id
@@ -434,11 +446,12 @@ def get_or_create_validation_sample(db, target_per_gender=100):
               AND pc.gender_confidence > 0.7
               AND pc.poster_gender = 'male'
               AND c.body NOT LIKE '%Response by poster:%'
+              {source_clause}
             ORDER BY RANDOM()
             LIMIT ?
         ''', [target_per_gender]).fetchall()
 
-        female_sample = db.execute('''
+        female_sample = db.execute(f'''
             SELECT c.comment_id
             FROM comment_classifications cc
             JOIN comments c ON cc.comment_id = c.comment_id
@@ -447,6 +460,7 @@ def get_or_create_validation_sample(db, target_per_gender=100):
               AND pc.gender_confidence > 0.7
               AND pc.poster_gender = 'female'
               AND c.body NOT LIKE '%Response by poster:%'
+              {source_clause}
             ORDER BY RANDOM()
             LIMIT ?
         ''', [target_per_gender]).fetchall()
@@ -461,6 +475,7 @@ def get_or_create_validation_sample(db, target_per_gender=100):
             db.execute('INSERT INTO validation_sample (comment_id, sample_order) VALUES (?, ?)', [cid, i])
 
         db.commit()
+        return len(all_ids)
 
     return existing
 
@@ -470,8 +485,12 @@ def validate():
     """Spot-check validation interface for LLM classifications."""
     db = get_db()
 
+    # Check for source filter and regenerate flag
+    source_filter = request.args.get('source')  # 'reddit' or 'mf'
+    regenerate = request.args.get('regenerate') == '1'
+
     # Ensure we have a stratified sample
-    get_or_create_validation_sample(db, target_per_gender=100)
+    get_or_create_validation_sample(db, target_per_gender=100, source_filter=source_filter, force_regenerate=regenerate)
 
     # Handle POST (save blind validation - direction only)
     if request.method == 'POST':

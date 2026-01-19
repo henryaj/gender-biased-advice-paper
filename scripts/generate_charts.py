@@ -51,6 +51,32 @@ def get_data():
     return [dict(row) for row in rows]
 
 
+def get_data_by_platform():
+    """Get analysis data from database, separated by platform."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    query = """
+        SELECT
+            cc.advice_direction,
+            pc.poster_gender,
+            s.name as platform
+        FROM comments c
+        JOIN comment_classifications cc ON c.comment_id = cc.comment_id
+        JOIN posts p ON c.post_id = p.post_id
+        JOIN post_classifications pc ON p.post_id = pc.post_id
+        JOIN sources s ON p.source_id = s.source_id
+        WHERE cc.is_advice = 1
+        AND pc.poster_gender IN ('male', 'female')
+        AND s.name IN ('askmetafilter', 'reddit_relationship_advice')
+    """
+
+    rows = conn.execute(query).fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
 def chart_critical_by_gender(data):
     """Bar chart: Critical advice rate by gender with 95% CI error bars."""
     male_total = sum(1 for d in data if d['poster_gender'] == 'male')
@@ -227,14 +253,92 @@ def chart_advice_distribution(data):
     print("Saved: chart_advice_distribution.png/pdf")
 
 
+def chart_platform_comparison(data):
+    """Grouped bar chart comparing critical advice rates across platforms."""
+    # Separate by platform and gender
+    stats = {}
+    for platform in ['askmetafilter', 'reddit_relationship_advice']:
+        stats[platform] = {'male_critical': 0, 'male_total': 0, 'female_critical': 0, 'female_total': 0}
+
+    for row in data:
+        platform = row['platform']
+        if platform not in stats:
+            continue
+        if row['poster_gender'] == 'male':
+            stats[platform]['male_total'] += 1
+            if row['advice_direction'] == 'critical_of_op':
+                stats[platform]['male_critical'] += 1
+        else:
+            stats[platform]['female_total'] += 1
+            if row['advice_direction'] == 'critical_of_op':
+                stats[platform]['female_critical'] += 1
+
+    # Calculate rates and CIs
+    mf_male_rate = stats['askmetafilter']['male_critical'] / stats['askmetafilter']['male_total'] * 100
+    mf_female_rate = stats['askmetafilter']['female_critical'] / stats['askmetafilter']['female_total'] * 100
+    rd_male_rate = stats['reddit_relationship_advice']['male_critical'] / stats['reddit_relationship_advice']['male_total'] * 100
+    rd_female_rate = stats['reddit_relationship_advice']['female_critical'] / stats['reddit_relationship_advice']['female_total'] * 100
+
+    mf_male_ci = ci_95(stats['askmetafilter']['male_critical'] / stats['askmetafilter']['male_total'], stats['askmetafilter']['male_total'])
+    mf_female_ci = ci_95(stats['askmetafilter']['female_critical'] / stats['askmetafilter']['female_total'], stats['askmetafilter']['female_total'])
+    rd_male_ci = ci_95(stats['reddit_relationship_advice']['male_critical'] / stats['reddit_relationship_advice']['male_total'], stats['reddit_relationship_advice']['male_total'])
+    rd_female_ci = ci_95(stats['reddit_relationship_advice']['female_critical'] / stats['reddit_relationship_advice']['female_total'], stats['reddit_relationship_advice']['female_total'])
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    x = np.array([0, 1])
+    width = 0.35
+
+    male_rates = [mf_male_rate, rd_male_rate]
+    female_rates = [mf_female_rate, rd_female_rate]
+    male_cis = [mf_male_ci, rd_male_ci]
+    female_cis = [mf_female_ci, rd_female_ci]
+
+    bars1 = ax.bar(x - width/2, male_rates, width, yerr=male_cis, capsize=5,
+                   label='Male OP', color=MALE_COLOR, error_kw={'elinewidth': 2, 'capthick': 2})
+    bars2 = ax.bar(x + width/2, female_rates, width, yerr=female_cis, capsize=5,
+                   label='Female OP', color=FEMALE_COLOR, error_kw={'elinewidth': 2, 'capthick': 2})
+
+    # Add value labels
+    for i, (m_rate, f_rate, m_ci, f_ci) in enumerate(zip(male_rates, female_rates, male_cis, female_cis)):
+        ax.text(i - width/2, m_rate + m_ci + 1, f'{m_rate:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=10)
+        ax.text(i + width/2, f_rate + f_ci + 1, f'{f_rate:.1f}%', ha='center', va='bottom', fontweight='bold', fontsize=10)
+
+    ax.set_ylabel('Critical Advice Rate (%)')
+    ax.set_title('Critical Advice by Gender: Platform Comparison', fontweight='bold', pad=15)
+    ax.set_xticks(x)
+    ax.set_xticklabels(['Ask Metafilter', 'Reddit r/relationship_advice'])
+    ax.set_ylim(0, 38)
+    ax.legend(loc='upper right')
+
+    # Add ratio annotations
+    mf_ratio = mf_male_rate / mf_female_rate
+    rd_ratio = rd_male_rate / rd_female_rate
+    ax.annotate(f'M/F ratio: {mf_ratio:.1f}x', xy=(0, 32), ha='center', fontsize=10,
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
+    ax.annotate(f'M/F ratio: {rd_ratio:.1f}x', xy=(1, 32), ha='center', fontsize=10,
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
+
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / 'chart_platform_comparison.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'chart_platform_comparison.pdf', bbox_inches='tight')
+    plt.close()
+    print("Saved: chart_platform_comparison.png/pdf")
+
+
 def main():
     print("Generating charts...")
     data = get_data()
-    print(f"Loaded {len(data)} comments")
+    print(f"Loaded {len(data)} comments (MetaFilter only)")
 
     chart_critical_by_gender(data)
     chart_by_category(data)
     chart_advice_distribution(data)
+
+    # Cross-platform comparison
+    platform_data = get_data_by_platform()
+    print(f"Loaded {len(platform_data)} comments (both platforms)")
+    chart_platform_comparison(platform_data)
 
     print("\nAll charts generated!")
 

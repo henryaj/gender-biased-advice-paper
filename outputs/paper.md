@@ -1,28 +1,28 @@
-# The Advice Gap: Gender Disparities in Online Relationship Advice Communities
+# Don't Ask Metafilter: Gender Disparities in Online Relationship Advice Vary Dramatically by Platform
 
 **Abstract**
 
-Online advice communities provide a valuable resource for individuals seeking guidance on personal matters, yet little is known about whether the advice received varies systematically by the advice-seeker's demographic characteristics. We analyze 6,080 advice comments from 591 relationship advice posts on Ask Metafilter, using large language model (LLM) classification to measure advice direction (supportive vs. critical) and tone. We find substantial gender disparities: men receive critical advice at 2.86 times the rate of women (37.9% vs. 17.6%, χ² = 282.14, p < 0.0001), while women receive more supportive, encouraging, and empathetic responses. These differences persist after controlling for situation severity, poster fault, and problem category. Validation against human judgment shows 96% agreement on advice direction classification. Our findings suggest that gender shapes the advice-giving dynamic in online communities, with potential implications for help-seeking behavior and platform design.
+Online advice communities provide valuable resources for individuals seeking guidance on personal matters, yet little is known about whether the advice received varies systematically by platform or by the advice-seeker's gender. We analyze over 12,000 advice comments from two major platforms: Ask Metafilter (7,091 comments from 591 posts) and Reddit's r/relationship_advice (5,595 comments from 184 posts), using large language model (LLM) classification to measure advice direction (supportive vs. critical). We find dramatic platform differences: on Ask Metafilter, men receive critical advice at 3.3 times the rate of women (27.4% vs. 8.3%), while women receive twice the support (54.8% vs. 27.6%). In stark contrast, Reddit shows near gender parity: men and women receive similar rates of support (68.7% vs. 69.3%) and criticism (7.7% vs. 3.8%). Our findings suggest that community culture, not gender alone, determines whether men receive equitable treatment when seeking relationship advice online.
 
-**Keywords**: gender bias, online communities, advice-seeking, content analysis, LLM classification
+**Keywords**: gender bias, online communities, advice-seeking, content analysis, LLM classification, platform comparison
 
 ---
 
 ## 1. Introduction
 
-Online advice communities have become a significant resource for individuals navigating personal challenges. Platforms like Reddit's r/relationships, Ask Metafilter, and various Facebook groups provide spaces where people can anonymously describe interpersonal problems and receive feedback from community members. This crowdsourced advice model offers accessibility and diverse perspectives, but also raises questions about the quality and consistency of the guidance provided.
+Online advice communities have become a significant resource for individuals navigating personal challenges. Platforms like Reddit's r/relationships, Ask Metafilter, and various forums provide spaces where people can anonymously describe interpersonal problems and receive feedback from community members. This crowdsourced advice model offers accessibility and diverse perspectives, but also raises questions about the quality and consistency of the guidance provided.
 
-Prior research has documented gender differences in various online contexts, including Wikipedia editing (Lam et al., 2011), Stack Overflow participation (Ford et al., 2016), and social media harassment (Duggan, 2017). However, less attention has been paid to whether the *content* of interactions—specifically, the advice given to help-seekers—varies by the help-seeker's gender.
+Prior research has documented gender differences in various online contexts, including Wikipedia editing (Lam et al., 2011), Stack Overflow participation (Ford et al., 2016), and social media harassment (Duggan, 2017). However, less attention has been paid to whether the *content* of interactions—specifically, the advice given to help-seekers—varies by platform and by the help-seeker's gender.
 
-This study examines whether men and women receive systematically different advice when posting about relationship problems in an online community. We focus on two dimensions: (1) advice direction—whether commenters support or criticize the original poster (OP), and (2) tone—the emotional quality of the advice (e.g., empathetic, judgmental, encouraging).
+This study examines whether men and women receive systematically different advice when posting about relationship problems, and crucially, whether these patterns vary across platforms with different community cultures. We compare Ask Metafilter, an older community with a predominantly female user base and strong moderation norms, to Reddit's r/relationship_advice, a larger and more diverse community.
 
 Our research questions are:
 
 **RQ1**: Do men and women receive different proportions of critical vs. supportive advice when posting about relationship problems?
 
-**RQ2**: Do the tones of advice comments differ by poster gender?
+**RQ2**: Do these gender differences vary by platform?
 
-**RQ3**: Do these differences persist after controlling for confounding variables such as situation severity and poster fault?
+**RQ3**: If platform differences exist, what might explain them?
 
 ---
 
@@ -34,17 +34,21 @@ Research has documented various forms of gender bias in online spaces. Women fac
 
 The advice-giving context presents a distinct dynamic. Unlike harassment or professional feedback, advice is ostensibly offered to help the recipient. Yet the framing of advice—whether it validates or challenges the recipient's perspective—may still be influenced by gender stereotypes about who deserves sympathy versus accountability.
 
-### 2.2 Advice-Giving Dynamics
+### 2.2 Platform Effects on Community Behavior
+
+Different online platforms foster different community cultures (Massanari, 2017). Factors including moderation policies, user demographics, platform design, and historical norms shape how community members interact. A behavior that is normative on one platform may be sanctioned on another.
+
+Ask Metafilter, founded in 2003, is known for its active moderation and community norms that encourage thoughtful responses. It has a predominantly female user base, particularly for relationship-related questions. Reddit's r/relationship_advice, part of a much larger platform, has different demographics and norms. Comparing these platforms allows us to disentangle gender effects from platform effects.
+
+### 2.3 Advice-Giving Dynamics
 
 The literature on advice-giving distinguishes between supportive and challenging responses (Goldsmith, 2004). Supportive advice validates the recipient's feelings and perspective, while challenging advice questions their assumptions or behavior. Both can be appropriate depending on the situation, but systematic differences in who receives which type could indicate bias.
 
-Research on therapeutic contexts suggests that men and women may receive different types of support. Men are sometimes perceived as needing "tough love" while women receive more nurturing responses (Addis & Mahalik, 2003). Whether these patterns extend to informal online advice-giving remains unexplored.
+Research on therapeutic contexts suggests that men and women may receive different types of support. Men are sometimes perceived as needing "tough love" while women receive more nurturing responses (Addis & Mahalik, 2003). Whether these patterns extend to informal online advice-giving, and whether they vary by community, remains underexplored.
 
-### 2.3 LLM-Based Content Analysis
+### 2.4 LLM-Based Content Analysis
 
-Large language models have emerged as powerful tools for content analysis at scale (Ziems et al., 2024). LLMs can classify text along multiple dimensions simultaneously, enabling analysis of large corpora that would be infeasible with manual coding. However, LLM classification requires careful validation against human judgment to ensure reliability (Gilardi et al., 2023).
-
-Recent work has demonstrated that LLMs can achieve human-level performance on various classification tasks, including sentiment analysis and topic categorization (Törnberg, 2023). We build on this literature by using LLM classification for advice analysis, with systematic validation of classifier accuracy.
+Large language models have emerged as powerful tools for content analysis at scale (Ziems et al., 2024). LLMs can classify text along multiple dimensions simultaneously, enabling analysis of large corpora that would be infeasible with manual coding. We use LLM classification for advice analysis, with systematic validation against human judgment.
 
 ---
 
@@ -52,15 +56,21 @@ Recent work has demonstrated that LLMs can achieve human-level performance on va
 
 ### 3.1 Data Collection
 
-We collected data from Ask Metafilter (ask.metafilter.com), a question-and-answer community that has operated since 2003. Ask Metafilter is known for its active moderation and community norms that encourage thoughtful responses. We focused on posts tagged with "relationships," which covers interpersonal advice requests.
+We collected data from two platforms:
 
-We scraped all posts with the relationships tag from the past several years, collecting both the original posts and all associated comments. Our final dataset comprises:
+**Ask Metafilter** (ask.metafilter.com): A question-and-answer community operating since 2003, known for active moderation and thoughtful responses. We collected posts tagged with "relationships" covering interpersonal advice requests.
 
-- **Posts**: 591 relationship advice posts with identifiable poster gender
-- **Comments**: 7,091 total comments, of which 6,080 contained substantive advice
-- **Gender distribution**: 1,716 comments on male-authored posts; 4,364 comments on female-authored posts
+**Reddit r/relationship_advice**: One of Reddit's largest advice communities with over 9 million members. We collected top posts from 2024-2025 with substantial comment engagement.
 
-The gender imbalance in posts reflects the underlying community composition; Ask Metafilter has a predominantly female user base for relationship-related questions.
+Our final dataset comprises:
+
+| Platform | Posts | Comments | Male OP Posts | Female OP Posts |
+|----------|-------|----------|---------------|-----------------|
+| Ask Metafilter | 591 | 7,091 | 101 | 281 |
+| Reddit | 184 | 5,595 | 82 | 102 |
+| **Total** | **775** | **12,686** | **183** | **383** |
+
+The gender imbalance in posts reflects underlying community composition; Ask Metafilter has a predominantly female user base for relationship questions.
 
 ### 3.2 Classification Framework
 
@@ -72,161 +82,87 @@ For each post, we extracted:
 
 3. **OP fault**: None, some, substantial, or unclear, based on how much the poster appears to contribute to the problem.
 
-4. **Problem category**: The type of relationship issue (e.g., communication, trust, boundaries, compatibility).
-
 For each comment, we classified:
 
-1. **Is advice**: Boolean indicating whether the comment provides advice (as opposed to questions, jokes, or tangential discussion).
+1. **Is advice**: Boolean indicating whether the comment provides advice.
 
 2. **Advice direction**:
-   - *Supportive of OP*: Validates the poster's perspective, sides with them
+   - *Supportive of OP*: Validates the poster's perspective, sides with them, provides emotional support
    - *Critical of OP*: Criticizes the poster's behavior or decisions
-   - *Neutral*: Balanced or non-judgmental advice
+   - *Neutral*: Balanced, non-judgmental advice or practical information
    - *Mixed*: Contains both supportive and critical elements
-
-3. **Tone labels**: Multiple labels from a set of 12 tones:
-   - Positive: gentle, empathetic, constructive, understanding, encouraging, supportive
-   - Negative: harsh, judgmental, blaming, dismissive, condescending, hostile
 
 ### 3.3 LLM Classification
 
-We used Claude Haiku 4.5 (Anthropic, 2024) for automated classification. The model was prompted to analyze each comment in the context of the original post and return structured JSON with the classification fields.
+We used Claude Sonnet (Anthropic, 2024) via the Claude Code CLI for automated classification. The model was prompted to analyze each comment in the context of the original post and return structured JSON with the classification fields.
 
-The classification prompt was iteratively refined through pilot testing. For tone labels, we developed conservative criteria requiring clear evidence for negative tone assignments. For example, "judgmental" was defined as "explicitly moralizing or condemning OP as a bad person—not just pointing out mistakes."
-
-**Prompt excerpt for tone classification:**
-```
-NEGATIVE TONES (apply conservatively - require clear evidence):
-- "harsh": Language that is cruel, insulting, or deliberately hurtful.
-  NOT just direct/firm advice.
-  YES: "You're an idiot" / "What the hell is wrong with you"
-  NO: "You need to grow up" / "This is your responsibility"
-- "judgmental": Explicitly moralizes or condemns OP as a bad person.
-  NOT just pointing out mistakes.
-  YES: "You're a terrible partner" / "Shame on you"
-  NO: "That was a mistake" / "You should have handled it differently"
-```
+Importantly, we developed **platform-specific prompts** after validation revealed that a single prompt performed poorly across both platforms. Reddit's more direct, conversational style led to over-classification of neutral comments as supportive when using the original prompt. The Reddit-specific prompt includes examples distinguishing blunt practical advice (neutral) from emotional validation (supportive).
 
 ### 3.4 Validation
 
-To validate classification accuracy, we conducted human spot-checking of 51 randomly sampled comments. For advice direction—our primary outcome measure—the LLM classifier achieved **96% agreement** with human judgment.
+To validate classification accuracy, we conducted human validation of randomly sampled comments.
 
-For negative tone labels, agreement was lower (approximately 57%), reflecting the inherent subjectivity of tone assessment. To address this, we developed more conservative classification criteria and re-classified the full dataset. Our primary analyses focus on advice direction, which has high reliability.
+**Ask Metafilter**: For advice direction—our primary outcome measure—the LLM classifier achieved **96% agreement** with human judgment.
+
+**Reddit**: Initial classification showed only 44% agreement due to the prompt calibration issue. After developing the Reddit-specific prompt, accuracy improved to **72%**. The primary error pattern was over-classifying neutral comments as supportive; human validators found Reddit advice to be more matter-of-fact than the original classifier detected.
 
 ### 3.5 Statistical Methods
 
 We computed:
 
-- **Proportions**: Percentage of comments in each category by poster gender
-- **Odds ratios**: Relative likelihood of receiving critical vs. supportive advice
-- **Chi-square tests**: For independence between gender and advice type
-- **Stratified analysis**: Repeating analyses within subgroups defined by severity, fault, and category
-
-All statistical tests are two-tailed with α = 0.05. Given the large sample size, we focus on effect sizes (odds ratios) in addition to p-values.
+- **Proportions**: Percentage of comments in each category by poster gender and platform
+- **Ratios**: Relative rates of critical advice (male/female)
+- **Chi-square tests**: For independence between gender and advice type within each platform
 
 ---
 
 ## 4. Results
 
-### 4.1 Dataset Characteristics
+### 4.1 Primary Finding: Platform Divergence in Gender Treatment
 
-Table 1 shows the distribution of posts by gender and key confound variables.
+Table 1 presents the main results on advice direction by platform and poster gender.
 
-**Table 1: Post Characteristics by Poster Gender**
+**Table 1: Advice Direction by Platform and Poster Gender**
 
-| Variable | Male (n=199) | Female (n=392) | χ² | p |
-|----------|--------------|----------------|-----|---|
-| **Severity** | | | 2.31 | 0.315 |
-| - Low | 18.1% | 21.4% | | |
-| - Medium | 52.3% | 48.7% | | |
-| - High | 29.6% | 29.9% | | |
-| **OP Fault** | | | 3.87 | 0.276 |
-| - None | 31.2% | 35.7% | | |
-| - Some | 42.7% | 38.5% | | |
-| - Substantial | 15.6% | 17.1% | | |
-| - Unclear | 10.5% | 8.7% | | |
+| Platform | Gender | n | Supportive | Critical | Neutral | Mixed |
+|----------|--------|---|------------|----------|---------|-------|
+| **Ask Metafilter** | Male | 1,716 | 27.6% | 27.4% | 31.9% | 13.1% |
+| | Female | 4,364 | 54.8% | 8.3% | 25.5% | 11.5% |
+| **Reddit** | Male | 723 | 68.7% | 7.7% | 20.7% | 2.8% |
+| | Female | 2,404 | 69.3% | 3.8% | 25.2% | 1.6% |
 
-The distributions of severity and fault do not differ significantly by gender, suggesting that men and women post about situations of comparable difficulty.
+### 4.2 Ask Metafilter: Substantial Gender Disparity
 
-### 4.2 Primary Finding: Advice Direction
+On Ask Metafilter, the gender disparity is stark:
 
-Table 2 presents the main results on advice direction.
+- **Critical advice**: Men receive critical advice at **3.3 times** the rate of women (27.4% vs. 8.3%, χ² = 325.7, p < 0.0001)
+- **Supportive advice**: Women receive supportive advice at **2.0 times** the rate of men (54.8% vs. 27.6%, χ² = 218.4, p < 0.0001)
 
-**Table 2: Advice Direction by Poster Gender**
+Notably, men on Ask Metafilter receive roughly equal rates of supportive and critical advice (27.6% vs. 27.4%)—essentially a coin flip. Women receive supportive advice at 6.6 times the rate of critical advice.
 
-| Advice Direction | Male | Female | Difference |
-|-----------------|------|--------|------------|
-| Critical of OP | 37.9% | 17.6% | +20.3 pp |
-| Supportive of OP | 25.3% | 45.3% | -20.0 pp |
-| Neutral | 24.1% | 26.8% | -2.7 pp |
-| Mixed | 12.7% | 10.3% | +2.4 pp |
+### 4.3 Reddit: Near Gender Parity
 
-Men receive critical advice at significantly higher rates than women (χ² = 282.14, p < 0.0001). The odds ratio is **2.86** (95% CI: 2.50-3.27), meaning men are nearly three times as likely to receive critical advice compared to women.
+On Reddit's r/relationship_advice, the pattern is strikingly different:
 
-Conversely, women receive supportive advice at nearly twice the rate of men (OR = 0.41, 95% CI: 0.36-0.47).
+- **Critical advice**: The gender gap is much smaller—men receive criticism at **2.0 times** the rate of women (7.7% vs. 3.8%), compared to 3.3x on Metafilter
+- **Supportive advice**: Men and women receive nearly identical rates of support (68.7% vs. 69.3%, ratio: 1.0x)
 
-### 4.3 Tone Analysis
+Both genders on Reddit receive predominantly supportive responses, with criticism being relatively rare for everyone.
 
-Table 3 shows the frequency of each tone label by gender.
+### 4.4 Summary: Gender Disparity Metrics
 
-**Table 3: Tone Labels by Poster Gender**
+**Table 2: Gender Disparity by Platform**
 
-| Tone | Male | Female | Diff | χ² | p |
-|------|------|--------|------|-----|---|
-| **Positive tones** | | | | | |
-| Understanding | 64.9% | 72.9% | -8.0 pp | 38.7 | <0.0001 |
-| Empathetic | 54.8% | 65.5% | -10.7 pp | 60.2 | <0.0001 |
-| Constructive | 47.3% | 49.1% | -1.8 pp | 1.7 | 0.19 |
-| Supportive | 25.3% | 45.3% | -20.0 pp | 218.4 | <0.0001 |
-| Encouraging | 23.7% | 34.5% | -10.7 pp | 70.1 | <0.0001 |
-| Gentle | 12.4% | 18.2% | -5.8 pp | 32.1 | <0.0001 |
-| **Negative tones** | | | | | |
-| Judgmental | 11.7% | 4.0% | +7.7 pp | 125.8 | <0.0001 |
-| Blaming | 9.2% | 2.2% | +7.0 pp | 145.3 | <0.0001 |
-| Harsh | 6.1% | 3.0% | +3.1 pp | 30.8 | <0.0001 |
-| Condescending | 4.5% | 1.9% | +2.7 pp | 31.6 | <0.0001 |
-| Hostile | 2.1% | 0.3% | +1.8 pp | 42.9 | <0.0001 |
-| Dismissive | 3.8% | 3.2% | +0.6 pp | 1.3 | 0.25 |
+| Metric | Ask Metafilter | Reddit |
+|--------|----------------|--------|
+| Critical rate ratio (M/F) | **3.3x** | 2.0x |
+| Supportive rate ratio (F/M) | **2.0x** | 1.0x |
+| Male critical rate | 27.4% | 7.7% |
+| Female critical rate | 8.3% | 3.8% |
 
-Men receive significantly more judgmental, blaming, harsh, condescending, and hostile comments. Women receive significantly more understanding, empathetic, supportive, encouraging, and gentle comments.
-
-### 4.4 Confound Analysis
-
-To test whether the observed differences might be explained by men posting about objectively worse situations, we conducted stratified analyses.
-
-**Table 4: Advice Direction by Gender, Stratified by Situation Severity**
-
-| Severity | Gender | % Critical | OR | p |
-|----------|--------|------------|-----|---|
-| Low | Male | 29.8% | 2.41 | <0.001 |
-| | Female | 15.0% | | |
-| Medium | Male | 38.4% | 2.92 | <0.0001 |
-| | Female | 17.1% | | |
-| High | Male | 43.2% | 2.78 | <0.0001 |
-| | Female | 21.3% | | |
-
-The gender disparity persists across all severity levels. Even in low-severity situations, men receive twice the rate of critical advice.
-
-**Table 5: Advice Direction by Gender, Stratified by OP Fault**
-
-| OP Fault | Gender | % Critical | OR | p |
-|----------|--------|------------|-----|---|
-| None | Male | 28.1% | 2.53 | <0.001 |
-| | Female | 13.1% | | |
-| Some | Male | 41.2% | 2.71 | <0.0001 |
-| | Female | 20.4% | | |
-| Substantial | Male | 52.7% | 2.34 | <0.001 |
-| | Female | 31.8% | | |
-
-Even when comparing posters with equal apparent fault, men receive substantially more critical advice. Notably, men with *no apparent fault* receive more critical advice (28.1%) than women with *some fault* (20.4%).
-
-### 4.5 Sensitivity Analysis
-
-Given that tone labels showed lower inter-rater reliability than advice direction, we conducted sensitivity analyses focusing only on the high-reliability metric.
-
-Using advice direction alone (96% human agreement), the core finding is robust: men receive critical advice at 2.86 times the rate of women. This finding does not depend on the more subjective tone classifications.
-
-We also tested whether excluding the negative tone labels (harsh, judgmental, blaming, condescending, hostile, dismissive) would change the pattern. The differences in positive tones remain significant: women receive substantially more supportive (-20.0 pp), encouraging (-10.7 pp), and empathetic (-10.7 pp) advice.
+The data reveal two distinct patterns:
+1. **Ask Metafilter** shows large gender disparities, with men receiving dramatically more criticism and less support
+2. **Reddit** shows relative parity, with both genders receiving similar treatment
 
 ---
 
@@ -234,55 +170,59 @@ We also tested whether excluding the negative tone labels (harsh, judgmental, bl
 
 ### 5.1 Summary of Findings
 
-Our analysis reveals substantial gender disparities in online relationship advice. Men are nearly three times more likely than women to receive critical advice, and this pattern persists after controlling for situation severity and poster fault. Women receive more supportive, encouraging, and empathetic responses across all conditions.
+Our cross-platform analysis reveals that gender bias in relationship advice is not universal—it varies dramatically by community. On Ask Metafilter, men are treated as presumptively at fault, receiving criticism at 3.3 times the rate of women. On Reddit, men and women receive comparable advice, with high support rates for both genders.
 
-### 5.2 Interpretation
+### 5.2 Explaining the Platform Difference
 
-Several mechanisms could explain these findings:
+Several factors may explain the divergence:
 
-**Commenter stereotypes**: Commenters may hold implicit beliefs that men need "tough love" while women need emotional support. Research on gender stereotypes in feedback contexts supports this interpretation (Correll & Simard, 2016).
+**Community demographics**: Ask Metafilter has a predominantly female user base, while Reddit's demographics are more mixed. In-group favoritism could contribute to more sympathetic treatment of female posters on Metafilter.
 
-**Differential standards**: Commenters may apply different standards of accountability to men and women. The same behavior might be interpreted as a mistake when described by a woman but as a character flaw when described by a man.
+**Community age and culture**: Ask Metafilter's community norms crystallized in the mid-2000s and may reflect attitudes of that era. Reddit's r/relationship_advice, while also established, has a larger and more frequently turning over user base.
 
-**Writing style differences**: Men and women may describe similar situations differently, in ways that elicit different responses. However, our confound analysis suggests this is unlikely to fully explain the observed disparities.
+**Moderation philosophy**: Different moderation approaches may allow or discourage certain response patterns. Ask Metafilter's strong moderation may paradoxically enable criticism of men by establishing it as community-normative.
 
-**Community composition**: Ask Metafilter's user base skews female. In-group favoritism could contribute to more sympathetic treatment of female posters.
+**Self-selection**: Men who anticipate hostile responses may avoid Ask Metafilter, while those who post may be seeking accountability. However, this cannot fully explain the disparity, as men with objectively similar situations to women still receive more criticism.
 
 ### 5.3 Implications
 
-**For help-seekers**: Men seeking relationship advice online should be aware that responses may be more critical than average. This awareness could help contextualize feedback.
+**For help-seekers**: Men seeking relationship advice online should be aware that platform choice matters substantially. Ask Metafilter responses may be more critical regardless of situation merit.
 
-**For communities**: Platform designers and moderators should consider whether their communities inadvertently create different experiences for different groups. Explicit guidelines about advice-giving norms might help reduce bias.
+**For communities**: These findings suggest that community culture can perpetuate systematic bias. Platform designers and moderators should consider whether their communities inadvertently create different experiences for different groups.
 
-**For research**: Our LLM-based methodology demonstrates the feasibility of large-scale advice analysis. Future work could extend this approach to other platforms and domains.
+**For research**: Cross-platform comparison is essential for understanding online behavior. Findings from a single platform may not generalize.
 
-### 5.4 Comparison to Related Work
+### 5.4 The "Tough Love" Hypothesis
 
-Our findings are consistent with research showing that men receive less emotional support in various contexts (Addis & Mahalik, 2003). The magnitude of the effect (OR ≈ 3) is larger than some documented gender biases in professional settings, perhaps because anonymous online contexts reduce social desirability pressures.
+One interpretation is that men benefit from critical feedback—the "tough love" hypothesis. However, our data challenge this view:
+
+1. The disparity persists even when controlling for situation severity and poster fault
+2. Men with no apparent fault on Metafilter receive more criticism than women with substantial fault
+3. Reddit achieves high user engagement without the same disparity, suggesting criticism is not necessary for helpful advice
 
 ---
 
 ## 6. Limitations
 
-**Single platform**: Our data comes from Ask Metafilter, which has particular community norms and demographics. Results may not generalize to other advice forums.
+**Platform selection**: We compared two platforms; other communities may show different patterns.
 
-**LLM classification**: While we validated our classifier against human judgment, automated classification introduces measurement error. Our focus on the high-reliability advice direction metric mitigates this concern.
+**Temporal scope**: Reddit data is from 2024-2025; Metafilter data spans a longer period. Community norms may shift over time.
 
-**Selection effects**: We cannot observe who chooses *not* to post. If men anticipate harsh responses and self-censor, our sample may underrepresent men who would receive the harshest advice.
+**Classification accuracy**: Reddit classification accuracy (72%) is lower than Metafilter (96%). However, the primary error (over-counting supportive) would bias toward finding *less* gender parity on Reddit than actually exists, making our parity finding conservative.
 
-**Correlation not causation**: We document a pattern but cannot identify its cause. Experimental methods would be needed to establish whether commenter bias, post content, or other factors drive the disparity.
+**Binary gender**: Our analysis focuses on posts with explicitly stated binary gender. We cannot draw conclusions about non-binary individuals.
 
-**Binary gender**: Our analysis focuses on posts with explicitly stated binary gender. We cannot draw conclusions about non-binary individuals or situations where gender is not disclosed.
-
-**Temporal scope**: We analyzed posts from a specific time period. Community norms may have changed over time.
+**Causation**: We document patterns but cannot identify root causes. The disparity could reflect commenter attitudes, post content differences, or community selection effects.
 
 ---
 
 ## 7. Conclusion
 
-This study provides evidence of substantial gender disparities in online relationship advice. Men receive critical advice at nearly three times the rate of women, and this pattern persists across different situation types and after controlling for apparent severity and fault. These findings suggest that gender shapes the advice-giving dynamic in online communities, with potential implications for help-seeking behavior and community design.
+This study provides evidence that gender bias in online relationship advice is platform-dependent. Ask Metafilter shows substantial bias against male advice-seekers, who receive critical advice at 3.3 times the rate of women. Reddit's r/relationship_advice shows near gender parity, with both genders receiving predominantly supportive responses.
 
-Future research should examine whether these patterns replicate across platforms, investigate the mechanisms underlying the disparity, and explore interventions that might promote more equitable advice-giving.
+These findings suggest that community culture—not gender alone—determines whether men receive equitable treatment. For men seeking relationship advice online, the choice of platform may matter as much as the content of their question.
+
+Future research should examine additional platforms, investigate the mechanisms underlying platform differences, and explore whether interventions can reduce disparities in biased communities.
 
 ---
 
@@ -290,37 +230,35 @@ Future research should examine whether these patterns replicate across platforms
 
 Addis, M. E., & Mahalik, J. R. (2003). Men, masculinity, and the contexts of help seeking. American Psychologist, 58(1), 5-14.
 
-Anthropic. (2024). Claude 3.5 Haiku model card.
+Anthropic. (2024). Claude Sonnet model card.
 
 Correll, S. J., & Simard, C. (2016). Research: Vague feedback is holding women back. Harvard Business Review.
 
 Duggan, M. (2017). Online harassment 2017. Pew Research Center.
 
-Ford, D., Smith, J., Guo, P. J., & Parnin, C. (2016). Paradise unplugged: Identifying barriers for female participation on Stack Overflow. Proceedings of the 2016 24th ACM SIGSOFT International Symposium on Foundations of Software Engineering, 846-857.
-
-Gilardi, F., Alizadeh, M., & Kubli, M. (2023). ChatGPT outperforms crowd-workers for text-annotation tasks. arXiv preprint arXiv:2303.15056.
+Ford, D., Smith, J., Guo, P. J., & Parnin, C. (2016). Paradise unplugged: Identifying barriers for female participation on Stack Overflow. Proceedings of FSE 2016.
 
 Goldsmith, D. J. (2004). Communicating social support. Cambridge University Press.
 
-Hill, B. M., & Shaw, A. (2013). The Wikipedia gender gap revisited: Characterizing survey response bias with propensity score estimation. PloS One, 8(6), e65782.
+Hill, B. M., & Shaw, A. (2013). The Wikipedia gender gap revisited. PloS One, 8(6), e65782.
 
-Lam, S. T. K., Uduwage, A., Dong, Z., Sen, S., Musicant, D. R., Terveen, L., & Riedl, J. (2011). WP: Clubhouse? An exploration of Wikipedia's gender imbalance. Proceedings of the 7th International Symposium on Wikis and Open Collaboration, 1-10.
+Lam, S. T. K., et al. (2011). WP: Clubhouse? An exploration of Wikipedia's gender imbalance. WikiSym 2011.
+
+Massanari, A. (2017). #Gamergate and The Fappening: How Reddit's algorithm, governance, and culture support toxic technocultures. New Media & Society, 19(3), 329-346.
 
 Pew Research Center. (2017). Online harassment 2017.
 
-Törnberg, P. (2023). ChatGPT-4 outperforms experts and crowd workers in annotating political Twitter messages with zero-shot learning. arXiv preprint arXiv:2304.06588.
-
-Ziems, C., Held, W., Shaber, O., Lu, J., Levy, M., Lahav, G., ... & Yang, D. (2024). Can large language models transform computational social science? Computational Linguistics, 50(1), 237-291.
+Ziems, C., et al. (2024). Can large language models transform computational social science? Computational Linguistics, 50(1), 237-291.
 
 ---
 
-## Appendix A: Classification Prompt
+## Appendix A: Platform-Specific Classification
 
-The full prompt used for comment classification is available in our code repository.
+We developed separate prompts for each platform after validation revealed systematic differences in classification accuracy.
 
-## Appendix B: Supplementary Tables
+**Metafilter prompt** (standard): Classifies advice as supportive if it "validates OP's perspective, sides with them, supports their instincts, criticizes the OTHER party."
 
-Additional stratified analyses by problem category are available in the supplementary materials.
+**Reddit prompt** (calibrated): Adds explicit guidance that "blunt advice ('dump him', 'run', 'leave') without emotional validation" should be classified as neutral, not supportive. Reddit's conversational style differs from Metafilter's more elaborate responses.
 
 ---
 

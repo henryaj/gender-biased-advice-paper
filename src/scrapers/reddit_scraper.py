@@ -354,9 +354,15 @@ class RedditJSONScraper:
         subreddit: str = "relationship_advice",
         sort: str = "top",
         time_filter: str = "year",
-        max_posts: int = 600
+        max_posts: int = 600,
+        require_gender_marker: bool = True
     ) -> List[Dict]:
-        """Fetch posts that have gender markers."""
+        """Fetch posts, optionally requiring gender markers.
+
+        Args:
+            require_gender_marker: If True, only include posts with explicit markers like [25M].
+                                   If False, include all posts (gender can be inferred later by LLM).
+        """
         posts = []
         after = self.checkpoint.get("after")
         posts_checked = 0
@@ -368,7 +374,7 @@ class RedditJSONScraper:
             if after:
                 params += f"&after={after}"
 
-            logger.info(f"Fetching posts... (checked {posts_checked}, found {len(posts)} with gender)")
+            logger.info(f"Fetching posts... (checked {posts_checked}, found {len(posts)})")
 
             data = self._get_json(url + params)
             if not data:
@@ -397,10 +403,11 @@ class RedditJSONScraper:
                 full_text = f"{post.get('title', '')} {selftext}"
                 markers = self.extract_gender_markers(full_text)
 
-                if not markers:
+                # Skip if we require markers and none found
+                if require_gender_marker and not markers:
                     continue
 
-                posts.append({
+                post_data = {
                     'post_id': f"reddit_{post_id}",
                     'reddit_id': post_id,
                     'title': post.get('title', ''),
@@ -411,10 +418,19 @@ class RedditJSONScraper:
                     'num_comments': post.get('num_comments', 0),
                     'url': f"https://reddit.com{post.get('permalink', '')}",
                     'subreddit': subreddit,
-                    'op_gender': markers[0]['gender'],
-                    'op_age': markers[0]['age'],
+                    'gender_marker_present': bool(markers),
                     'all_markers': markers,
-                })
+                }
+
+                # Add extracted gender if markers present
+                if markers:
+                    post_data['op_gender'] = markers[0]['gender']
+                    post_data['op_age'] = markers[0]['age']
+                else:
+                    post_data['op_gender'] = None
+                    post_data['op_age'] = None
+
+                posts.append(post_data)
 
                 if len(posts) >= max_posts:
                     break
@@ -426,7 +442,8 @@ class RedditJSONScraper:
             if not after:
                 break
 
-        logger.info(f"Found {len(posts)} posts with gender markers (checked {posts_checked} total)")
+        marker_count = sum(1 for p in posts if p['gender_marker_present'])
+        logger.info(f"Found {len(posts)} posts ({marker_count} with gender markers, checked {posts_checked} total)")
         return posts
 
     def get_comments(self, reddit_id: str) -> List[Dict]:
@@ -474,24 +491,33 @@ class RedditJSONScraper:
         subreddit: str = "relationship_advice",
         max_posts: int = 600,
         min_comments: int = 5,
-        checkpoint_every: int = 10
+        checkpoint_every: int = 10,
+        time_filter: str = "year",
+        sort: str = "top",
+        require_gender_marker: bool = True
     ) -> Dict[str, int]:
         """
         Scrape posts and comments from a subreddit.
 
         Args:
             subreddit: Subreddit to scrape
-            max_posts: Target number of posts (with gender markers)
+            max_posts: Target number of posts
             min_comments: Minimum comments required per post
             checkpoint_every: Save checkpoint every N posts
+            time_filter: Time filter for posts ('all', 'year', 'month', 'week', 'day')
+            sort: Sort method ('top', 'hot', 'new', 'controversial')
+            require_gender_marker: If False, include posts without explicit gender markers
         """
         source_id = db.get_source_id(f"reddit_{subreddit}")
 
-        logger.info(f"Starting Reddit scrape of r/{subreddit} (target={max_posts} posts)")
+        logger.info(f"Starting Reddit scrape of r/{subreddit} (target={max_posts} posts, time={time_filter}, sort={sort}, require_marker={require_gender_marker})")
 
         posts = self.get_posts_with_gender(
             subreddit=subreddit,
-            max_posts=max_posts * 2  # Fetch extra to account for filtering
+            max_posts=max_posts * 2,  # Fetch extra to account for filtering
+            time_filter=time_filter,
+            sort=sort,
+            require_gender_marker=require_gender_marker
         )
 
         posts_inserted = 0
@@ -516,6 +542,12 @@ class RedditJSONScraper:
                     skipped += 1
                     continue
 
+                # Build flair - only include gender/age if present
+                if post.get('op_gender'):
+                    flair = f"gender:{post['op_gender']},age:{post['op_age']}"
+                else:
+                    flair = "gender:unknown"
+
                 inserted = db.insert_post(
                     post_id=post['post_id'],
                     source_id=source_id,
@@ -523,13 +555,14 @@ class RedditJSONScraper:
                     body=post['body'],
                     author=post['author'],
                     timestamp=post['timestamp'],
-                    flair=f"gender:{post['op_gender']},age:{post['op_age']}",
+                    flair=flair,
                     raw_json={
                         'subreddit': post['subreddit'],
                         'score': post['score'],
                         'url': post['url'],
-                        'op_gender': post['op_gender'],
-                        'op_age': post['op_age'],
+                        'op_gender': post.get('op_gender'),
+                        'op_age': post.get('op_age'),
+                        'gender_marker_present': post.get('gender_marker_present', False),
                         'all_markers': post['all_markers'],
                     }
                 )
